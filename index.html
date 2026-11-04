@@ -1,0 +1,2164 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TAHU TAHU TSUNAMI! — Tata Kelola Kesiapsiagaan</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Fredoka+One&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --sky-top: #4facfe; --sky-bottom: #00f2fe; --sea-color: #0077be; --text-dark: #2c3e50;
+            --btn-primary: #ffb703; --btn-secondary: #8ecae6; --success: #2ecc71; --danger: #e74c3c;
+            --font-heading: 'Fredoka One', cursive; --font-body: 'Baloo 2', sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
+        body, html { width: 100%; height: 100%; overflow: hidden; background-color: #000; font-family: var(--font-body); display: flex; justify-content: center; align-items: center; }
+
+        #game-container {
+            position: relative; width: 100%; max-width: 1024px; height: 100vh; max-height: 600px;
+            background: linear-gradient(to bottom, #2b5876, #4e4376); overflow: hidden;
+            box-shadow: 0 0 30px rgba(0,0,0,0.8); border-radius: 12px;
+        }
+        @media (max-width: 1024px) { #game-container { max-height: none; height: 100%; border-radius: 0; } }
+
+        /* ===== BACKGROUND LAYERS ===== */
+        .bg-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; }
+        .sun { position: absolute; top: 10%; right: 15%; width: 80px; height: 80px; background: radial-gradient(circle, #fff 20%, #ffdd00 60%, transparent 100%); border-radius: 50%; opacity: 0.6; }
+        .cloud { position: absolute; background: rgba(255,255,255,0.7); border-radius: 50px; animation: moveClouds linear infinite; }
+        .cloud::before, .cloud::after { content: ''; position: absolute; background: rgba(255,255,255,0.7); border-radius: 50%; }
+        .cloud1 { top: 15%; width: 120px; height: 40px; animation-duration: 40s; }
+        .cloud1::before { width: 60px; height: 60px; top: -25px; left: 15px; }
+        .cloud1::after { width: 80px; height: 70px; top: -35px; right: 15px; }
+        @keyframes moveClouds { from { left: -30%; } to { left: 130%; } }
+        .mountains { position: absolute; bottom: 20%; left: 0; width: 100%; height: 30%; background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 1000 300" xmlns="http://www.w3.org/2000/svg"><path d="M0 300 L100 150 L250 250 L400 100 L550 220 L700 120 L850 200 L1000 150 L1000 300 Z" fill="%23344e55" opacity="0.6"/></svg>'); background-size: cover; background-position: bottom; z-index: 2; }
+
+        /* ===== WORLD ===== */
+        #game-world { position: absolute; bottom: 0; left: 0; width: 8000px; height: 100%; z-index: 3; }
+
+        .ground {
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 20%;
+            background: linear-gradient(to bottom, #2ecc71 0%, #27ae60 10%, #8e44ad 10%, #6c3483 100%);
+            border-top: 5px solid #fff; box-shadow: 0 -5px 15px rgba(0,0,0,0.5);
+        }
+
+        /* ===== MOUNTAIN PEAK & EVACUATION POST ===== */
+        .mountain-peak {
+            position: absolute; bottom: 20%; left: 6000px; width: 2000px; height: 400px;
+            z-index: 3;
+        }
+        .mountain-peak svg { width: 100%; height: 100%; display: block; }
+
+        .hill-tree {
+            position: absolute; width: 30px; height: 60px;
+            background: #8e44ad; border-radius: 5px; z-index: 4;
+        }
+        .hill-tree::before {
+            content: ''; position: absolute; top: -30px; left: -15px;
+            width: 60px; height: 60px; background: #27ae60; border-radius: 50%;
+        }
+
+        .evac-sign {
+            position: absolute; bottom: 21%; left: 5900px; z-index: 5;
+            background: #2ecc71; color: #fff; padding: 10px 15px;
+            border-radius: 10px; border: 3px solid #fff;
+            font-family: var(--font-heading); font-size: 1rem;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.3);
+        }
+        .evac-sign::after {
+            content: '⬆️'; position: absolute; top: -30px; left: 50%; transform: translateX(-50%);
+            font-size: 25px; animation: bounceArrow 1s infinite alternate;
+        }
+        @keyframes bounceArrow { 0% { transform: translate(-50%, 0); } 100% { transform: translate(-50%, -10px); } }
+
+        .posko-evacuation {
+            position: absolute; bottom: calc(20% + 300px); left: 7350px; z-index: 10;
+            width: 200px; height: 160px;
+            display: flex; justify-content: center; align-items: flex-end;
+        }
+
+        /* NPC Penjaga Posko */
+        .guard-npc {
+            position: absolute; bottom: calc(20% + 300px); width: 70px; height: 90px;
+            z-index: 11; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.4));
+            animation: idleGuard 2s infinite alternate ease-in-out;
+        }
+        .guard-left { left: 7180px; }
+        .guard-right { left: 7580px; transform: scaleX(-1); }
+        @keyframes idleGuard {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-5px); }
+        }
+
+        /* ===== MASSIVE TSUNAMI WALL ===== */
+        .tsunami-entity {
+            position: absolute; bottom: 0; left: -6000px; width: 6000px; height: 100%;
+            z-index: 2; pointer-events: none;
+            background: linear-gradient(to right, #012b45, #01579b, #0288d1);
+            box-shadow: 20px 0 40px rgba(0,0,0,0.6);
+        }
+        
+        .tsunami-wave-front {
+            position: absolute; right: -50px; bottom: 0; width: 300px; height: 100%;
+            background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 300 600" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="wGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="%2329b6f6"/><stop offset="50%" stop-color="%230288d1"/><stop offset="100%" stop-color="%2301579b"/></linearGradient><linearGradient id="fGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="%23ffffff"/><stop offset="100%" stop-color="%23e1f5fe" stop-opacity="0.8"/></linearGradient></defs><path d="M 0 600 L 0 100 Q 50 50 150 100 Q 250 150 300 80 L 300 600 Z" fill="url(%23wGrad)"/><path d="M 0 100 Q 50 50 150 100 Q 200 130 230 200 Q 260 280 300 250 L 300 80 Q 250 150 150 100 Q 50 50 0 100 Z" fill="url(%23fGrad)"/><path d="M 0 100 Q 50 50 150 100 Q 250 150 300 80" stroke="%23fff" stroke-width="20" fill="none" stroke-linecap="round"/><path d="M 230 200 Q 260 280 300 250" stroke="%23fff" stroke-width="15" fill="none" stroke-linecap="round"/><path d="M 100 80 Q 120 60 140 80" stroke="%23fff" stroke-width="8" fill="none" stroke-linecap="round"/><path d="M 180 110 Q 200 90 220 110" stroke="%23fff" stroke-width="8" fill="none" stroke-linecap="round"/><circle cx="150" cy="70" r="8" fill="%23fff"/><circle cx="180" cy="85" r="10" fill="%23fff"/><circle cx="120" cy="60" r="6" fill="%23fff"/><circle cx="220" cy="150" r="8" fill="%23fff"/><circle cx="260" cy="220" r="6" fill="%23fff"/></svg>') repeat-y;
+            background-size: 100% 100%;
+        }
+
+        .splash-container {
+            position: absolute; right: 200px; bottom: 80%; width: 150px; height: 100px;
+            overflow: hidden; z-index: 3;
+        }
+        .splash {
+            position: absolute; bottom: 0; width: 15px; height: 15px;
+            background: rgba(255,255,255,0.8); border-radius: 50%;
+            animation: splashUp 1.2s infinite ease-out;
+        }
+        .splash:nth-child(1) { left: 10%; animation-delay: 0s; }
+        .splash:nth-child(2) { left: 30%; animation-delay: 0.3s; width: 20px; height: 20px; }
+        .splash:nth-child(3) { left: 50%; animation-delay: 0.6s; width: 12px; height: 12px; }
+        .splash:nth-child(4) { left: 70%; animation-delay: 0.9s; width: 18px; height: 18px; }
+        .splash:nth-child(5) { left: 90%; animation-delay: 0.2s; }
+        @keyframes splashUp {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-80px) scale(1.5); opacity: 0; }
+        }
+
+        .shark {
+            position: absolute; width: 60px; height: 60px; z-index: 1;
+            filter: drop-shadow(0 5px 5px rgba(0,0,0,0.3));
+            animation: swim 2s infinite alternate ease-in-out;
+        }
+        .shark-1 { bottom: 20%; right: 150px; animation-delay: 0s; }
+        .shark-2 { bottom: 50%; right: 350px; animation-delay: 0.5s; }
+        .shark-3 { bottom: 70%; right: 50px; animation-delay: 1s; }
+        @keyframes swim {
+            0% { transform: translateY(0) rotate(-10deg); }
+            100% { transform: translateY(-20px) rotate(10deg); }
+        }
+
+        .boat {
+            position: absolute; width: 70px; height: 70px; z-index: 4;
+            filter: drop-shadow(0 5px 5px rgba(0,0,0,0.5));
+            animation: bob 2.5s infinite alternate ease-in-out;
+        }
+        .boat-1 { bottom: 85%; right: 100px; animation-delay: 0.2s; }
+        .boat-2 { bottom: 82%; right: 300px; animation-delay: 0.8s; width: 60px; height: 60px; }
+        @keyframes bob {
+            0% { transform: translateY(0) rotate(-5deg); }
+            100% { transform: translateY(-15px) rotate(5deg); }
+        }
+
+        /* HOUSES */
+        .house {
+            position: absolute; bottom: 20%;
+            background: linear-gradient(to bottom, #f39c12, #b9630d);
+            border: 3px solid #5b2c6f; border-radius: 5px 5px 0 0;
+            z-index: 4; box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+        }
+        .house::before {
+            content: ''; position: absolute; top: -35px; left: -10px; right: -10px; height: 35px;
+            background: linear-gradient(to bottom, #e74c3c, #a93226);
+            clip-path: polygon(50% 0, 100% 100%, 0 100%);
+        }
+        .house::after {
+            content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+            width: 30px; height: 45px; background: #5b2c6f; border-radius: 15px 15px 0 0;
+            border: 2px solid #333;
+        }
+
+        /* QUIZ BOXES */
+        .obstacle {
+            position: absolute; width: 70px; height: 70px;
+            background: linear-gradient(to bottom, #f1c40f, #f39c12);
+            border: 4px solid #d35400; border-radius: 50%;
+            display: flex; justify-content: center; align-items: center; font-size: 35px;
+            box-shadow: 0 0 20px #f1c40f, 0 10px 20px rgba(0,0,0,0.4);
+            z-index: 6; animation: float 2s infinite ease-in-out alternate;
+        }
+        .obstacle::after { content: '❓'; }
+        @keyframes float { 0% { transform: translateY(0); } 100% { transform: translateY(-12px); } }
+        .obstacle.cleared { display: none !important; }
+
+        /* NPC CRABS */
+        .npc-crab {
+            position: absolute; bottom: 20%; width: 60px; height: 60px;
+            z-index: 5;
+        }
+
+        /* NPC BIRDS */
+        .npc-bird {
+            position: absolute; bottom: 40%; width: 60px; height: 60px;
+            z-index: 5; filter: drop-shadow(0 5px 8px rgba(0,0,0,0.4));
+            animation: birdBob 0.6s infinite alternate;
+        }
+        @keyframes birdBob { 0% { transform: translateY(0); } 100% { transform: translateY(-12px); } }
+
+        /* FRIENDS */
+        .friend {
+            position: absolute; bottom: 20%; width: 50px; height: 50px;
+            z-index: 8; display: flex; justify-content: center; align-items: center;
+            font-size: 40px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4));
+        }
+        .friend::after {
+            content: '?'; position: absolute; top: -25px; right: -10px;
+            background: #f1c40f; color: #333; font-weight: bold;
+            width: 24px; height: 24px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-size: 16px;
+            border: 2px solid #333;
+            animation: bob 0.8s infinite alternate;
+        }
+        .friend.rescued::after { content: '✓'; background: #2ecc71; color: #fff; }
+        @keyframes bob { 0% { transform: translateY(0); } 100% { transform: translateY(-5px); } }
+
+        /* PLAYER */
+        #mpus {
+            position: absolute; bottom: 20%; left: 100px; width: 80px; height: 80px;
+            z-index: 10; transform-origin: bottom center;
+            filter: drop-shadow(0 10px 8px rgba(0,0,0,0.4));
+        }
+        #mpus.hurt { filter: drop-shadow(0 0 15px red) sepia(1) saturate(5) hue-rotate(-50deg); animation: shake 0.3s; }
+        #mpus.dance { animation: dance 0.6s infinite; }
+        @keyframes shake { 0% { transform: translateX(0); } 25% { transform: translateX(-10px); } 50% { transform: translateX(10px); } 75% { transform: translateX(-10px); } 100% { transform: translateX(0); } }
+        @keyframes dance {
+            0% { transform: rotate(0deg) scale(1); }
+            25% { transform: rotate(-15deg) scale(1.1); }
+            50% { transform: rotate(15deg) scale(1.1); }
+            75% { transform: rotate(-15deg) scale(1.1); }
+            100% { transform: rotate(0deg) scale(1); }
+        }
+
+        /* ===== UI ===== */
+        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 100; font-family: var(--font-body); }
+        .hud { position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.95); padding: 10px 20px; border-radius: 25px; font-weight: 800; display: flex; align-items: center; gap: 12px; box-shadow: 0 6px 0 rgba(0,0,0,0.15), 0 10px 20px rgba(0,0,0,0.2); font-size: 1.15rem; color: var(--text-dark); }
+        .heart { color: var(--danger); font-size: 1.4rem; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .heart.lost { transform: scale(0); opacity: 0; }
+        .star-hud { color: #f1c40f; }
+        .friend-hud { color: #e74c3c; }
+
+        #mobile-controls { position: absolute; bottom: 20px; left: 0; width: 100%; display: flex; justify-content: space-between; padding: 0 30px; pointer-events: none; }
+        .control-btn { pointer-events: auto; width: 75px; height: 75px; background: rgba(255,255,255,0.7); border: 4px solid #fff; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 24px; font-family: var(--font-heading); cursor: pointer; backdrop-filter: blur(10px); color: var(--text-dark); box-shadow: 0 6px 0 rgba(0,0,0,0.2); transition: all 0.1s; }
+        .control-btn:active { background: rgba(255,255,255,0.95); transform: translateY(4px); box-shadow: 0 2px 0 rgba(0,0,0,0.2); }
+        .dpad { display: flex; gap: 20px; }
+        #btn-jump { width: 100px; height: 100px; background: rgba(255, 183, 3, 0.85); border-radius: 30px; font-size: 20px; }
+
+        #tsunami-indicator {
+            position: absolute; bottom: 120px; left: 50%; transform: translateX(-50%);
+            background: rgba(231, 76, 60, 0.95); color: #fff; padding: 8px 20px;
+            border-radius: 20px; font-family: var(--font-heading); font-size: 1rem;
+            z-index: 150; animation: pulse 0.6s infinite alternate;
+            border: 3px solid #fff;
+        }
+        @keyframes pulse { 0% { transform: translateX(-50%) scale(1); } 100% { transform: translateX(-50%) scale(1.08); } }
+        #tsunami-indicator.hidden { display: none; }
+
+        /* ===== QUIZ MODAL (TRANSPARENT & CREATIVE) ===== */
+        #quiz-modal {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.4); /* Lebih transparan agar Timot terlihat */
+            display: none; justify-content: center; align-items: center;
+            pointer-events: auto; z-index: 200;
+            backdrop-filter: blur(8px); /* Efek blur kaca */
+        }
+        #quiz-modal.active { display: flex; animation: fadeIn 0.3s ease-out; }
+        
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .quiz-content {
+            background: rgba(255, 255, 255, 0.85); /* Semi-transparan */
+            width: 90%; max-width: 650px; padding: 35px; border-radius: 30px;
+            text-align: center;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3), inset 0 0 20px rgba(255,255,255,0.9);
+            border: 4px solid #fff;
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* Efek kilau di kotak kuis */
+        .quiz-content::before {
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: linear-gradient(to bottom right, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 40%, rgba(255,255,255,0) 100%);
+            transform: rotate(30deg); pointer-events: none;
+        }
+
+        @keyframes popIn { 0% { transform: scale(0.7) translateY(50px); opacity: 0; } 100% { transform: scale(1) translateY(0); opacity: 1; } }
+        
+        .timer-container {
+            width: 100%; height: 18px; background: rgba(255,255,255,0.5);
+            border-radius: 15px; margin-bottom: 25px; overflow: hidden;
+            border: 2px solid #fff; box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
+            position: relative; z-index: 1;
+        }
+        .timer-bar {
+            height: 100%; width: 100%;
+            background: linear-gradient(90deg, #e74c3c, #f39c12); /* Gradasi merah ke oranye */
+            transition: width 0.1s linear;
+            box-shadow: 0 0 10px rgba(231, 76, 60, 0.8);
+        }
+
+        .quiz-content h3 {
+            font-family: var(--font-heading); color: var(--danger); margin-bottom: 15px; font-size: 1.8rem;
+            text-shadow: 1px 1px 0 #fff, 2px 2px 5px rgba(0,0,0,0.1);
+            position: relative; z-index: 1;
+        }
+        .quiz-content p {
+            font-size: 1.2rem; margin-bottom: 25px; color: var(--text-dark); line-height: 1.6; font-weight: 700;
+            text-shadow: 1px 1px 0 #fff;
+            position: relative; z-index: 1;
+        }
+
+        .options { display: flex; flex-direction: column; gap: 15px; position: relative; z-index: 1; }
+        .option-btn {
+            background: rgba(255, 255, 255, 0.9);
+            border: 3px solid #fff; padding: 18px 20px; border-radius: 15px;
+            font-size: 1.1rem; font-family: var(--font-body); cursor: pointer; text-align: left;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-weight: 700; color: var(--text-dark);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            display: flex; align-items: center;
+        }
+        .option-btn:hover {
+            background: #fff;
+            transform: translateX(8px) scale(1.02);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.15);
+            border-color: var(--btn-secondary);
+        }
+        .option-btn.correct {
+            background: var(--success); color: #fff; border-color: #27ae60;
+            box-shadow: 0 0 20px rgba(46, 204, 113, 0.6);
+            transform: scale(1.05);
+        }
+        .option-btn.wrong {
+            background: var(--danger); color: #fff; border-color: #c0392b;
+            animation: shake 0.4s;
+        }
+        .feedback-msg { margin-top: 20px; font-weight: 800; font-size: 1.2rem; min-height: 30px; font-family: var(--font-heading); position: relative; z-index: 1; }
+        .feedback-msg.correct { color: var(--success); text-shadow: 0 0 10px rgba(46, 204, 113, 0.5); }
+        .feedback-msg.wrong { color: var(--danger); text-shadow: 0 0 10px rgba(231, 76, 60, 0.5); }
+
+        /* SCREENS (BASE) */
+        .screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, rgba(43, 88, 118, 0.95), rgba(78, 67, 118, 0.95));
+            display: none; flex-direction: column; justify-content: center; align-items: center;
+            text-align: center; padding: 20px; z-index: 300; pointer-events: auto;
+            overflow-y: auto;
+        }
+        .screen.active { display: flex; }
+        .menu-panel {
+            background: rgba(255,255,255,0.95); padding: 35px; border-radius: 30px;
+            box-shadow: 0 15px 0 rgba(0,0,0,0.1), 0 25px 50px rgba(0,0,0,0.5);
+            border: 5px solid #fff; max-width: 700px; width: 100%;
+            animation: menuPop 0.5s ease-out;
+            margin: auto;
+        }
+        @keyframes menuPop { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        .screen h1 { font-family: var(--font-heading); font-size: 2.6rem; color: var(--btn-primary); text-shadow: 3px 3px 0 #d35400; margin-bottom: 10px; line-height: 1.1; }
+        .screen h2 { font-family: var(--font-heading); font-size: 1.3rem; color: var(--sea-color); margin-bottom: 20px; }
+        .screen p { font-size: 1.1rem; color: var(--text-dark); margin-bottom: 20px; line-height: 1.5; font-weight: 500; }
+        .controls-info { display: flex; justify-content: center; gap: 15px; margin-bottom: 25px; flex-wrap: wrap; }
+        .key-badge { background: #eee; border: 3px solid #ccc; border-bottom: 6px solid #999; padding: 8px 15px; border-radius: 10px; font-weight: 800; font-size: 1.1rem; display: flex; flex-direction: column; align-items: center; }
+        .key-badge span { font-size: 0.8rem; color: #666; margin-top: 3px; }
+        .btn { background: var(--btn-primary); color: #fff; border: 4px solid #fff; padding: 12px 30px; font-size: 1.2rem; font-family: var(--font-heading); border-radius: 50px; cursor: pointer; margin: 8px; font-weight: bold; box-shadow: 0 6px 0 #d35400; transition: all 0.1s; }
+        .btn:active { transform: translateY(6px); box-shadow: 0 0 0 #d35400; }
+        .btn-secondary { background: var(--btn-secondary); box-shadow: 0 6px 0 #1a5276; }
+
+        .difficulty-options { display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; margin: 20px 0; }
+        .diff-btn {
+            background: linear-gradient(to bottom, #f8f9fa, #e9ecef); border: 4px solid #fff;
+            padding: 15px 20px; border-radius: 20px; cursor: pointer;
+            display: flex; flex-direction: column; align-items: center; gap: 5px;
+            min-width: 130px; transition: all 0.2s; box-shadow: 0 6px 0 rgba(0,0,0,0.2);
+            font-family: var(--font-heading); font-size: 1.2rem; color: var(--text-dark);
+        }
+        .diff-btn:hover { transform: translateY(-3px); box-shadow: 0 9px 0 rgba(0,0,0,0.2); }
+        .diff-btn:active { transform: translateY(3px); box-shadow: 0 3px 0 rgba(0,0,0,0.2); }
+        .diff-btn .icon { font-size: 2rem; }
+        .diff-btn .label { font-size: 1.1rem; }
+        .diff-btn .desc { font-size: 0.8rem; font-weight: 600; color: #666; }
+        .diff-easy { border-color: #2ecc71 !important; }
+        .diff-normal { border-color: #f39c12 !important; }
+        .diff-hard { border-color: #e74c3c !important; }
+
+        .audio-controls { position: absolute; top: 20px; left: 20px; display: flex; gap: 15px; z-index: 400; }
+        .audio-btn { background: rgba(255,255,255,0.9); border: 3px solid #fff; font-size: 1.5rem; cursor: pointer; border-radius: 50%; width: 50px; height: 50px; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 0 rgba(0,0,0,0.2); }
+
+        /* ===== MENU LAYOUT STYLES ===== */
+        #screen-menu {
+            background: linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%); /* Warna pastel cerah */
+            overflow: hidden;
+        }
+
+        .menu-bg-cloud {
+            position: absolute; background: rgba(255,255,255,0.8); border-radius: 50px;
+            animation: moveMenuClouds linear infinite; z-index: 1;
+        }
+        .menu-bg-cloud::before, .menu-bg-cloud::after { content: ''; position: absolute; background: rgba(255,255,255,0.8); border-radius: 50%; }
+        .m-cloud1 { top: 10%; width: 150px; height: 50px; animation-duration: 30s; }
+        .m-cloud1::before { width: 70px; height: 70px; top: -30px; left: 20px; }
+        .m-cloud1::after { width: 90px; height: 80px; top: -40px; right: 20px; }
+        .m-cloud2 { top: 60%; width: 120px; height: 40px; animation-duration: 45s; animation-delay: -15s; }
+        .m-cloud2::before { width: 60px; height: 60px; top: -25px; left: 15px; }
+        .m-cloud2::after { width: 70px; height: 70px; top: -35px; right: 15px; }
+        @keyframes moveMenuClouds { from { left: -30%; } to { left: 130%; } }
+
+        .menu-panel-new {
+            background: rgba(255, 255, 255, 0.85); /* Efek Kaca */
+            backdrop-filter: blur(10px);
+            padding: 30px 40px;
+            border-radius: 30px;
+            border: 6px solid #fff;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.2), inset 0 0 20px rgba(142, 202, 230, 0.3);
+            max-width: 900px;
+            width: 95%;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            gap: 30px;
+            position: relative;
+            z-index: 10;
+            animation: menuPop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            margin: auto;
+        }
+        @media (max-width: 768px) {
+            .menu-panel-new { flex-direction: column; padding: 20px; gap: 15px; }
+            .menu-left { margin-bottom: 10px; }
+        }
+
+        .menu-left {
+            flex: 0 0 250px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+        .menu-mpus-svg {
+            width: 220px;
+            height: 220px;
+            animation: floatMpus 2.5s infinite ease-in-out;
+            filter: drop-shadow(0 15px 15px rgba(0,0,0,0.2));
+        }
+        @keyframes floatMpus {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(3deg); }
+        }
+        .speech-bubble {
+            background: #fff;
+            border: 4px solid #8ecae6;
+            padding: 10px 15px;
+            border-radius: 15px;
+            font-family: var(--font-heading);
+            color: #0077be;
+            font-size: 1.1rem;
+            text-align: center;
+            position: relative;
+            margin-top: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            animation: pulseBubble 2s infinite alternate;
+        }
+        .speech-bubble::after {
+            content: ''; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
+            border-width: 10px; border-style: solid; border-color: transparent transparent #8ecae6 transparent;
+        }
+        @keyframes pulseBubble { 0% { transform: scale(1); } 100% { transform: scale(1.05); } }
+
+        .menu-right {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        .menu-right h1 {
+            font-family: var(--font-heading);
+            font-size: 3.2rem;
+            color: #ffb703;
+            text-shadow: 3px 3px 0 #d35400, 0 6px 10px rgba(0,0,0,0.2);
+            margin-bottom: 5px;
+            line-height: 1.1;
+            animation: popTitle 3s infinite alternate;
+        }
+        @keyframes popTitle { 0% { transform: scale(1); } 100% { transform: scale(1.03); } }
+        
+        .menu-right h2 {
+            font-family: var(--font-heading);
+            font-size: 1.2rem;
+            color: #0077be;
+            margin-bottom: 20px;
+            letter-spacing: 1px;
+        }
+
+        .rules-box {
+            background: #f0f8ff;
+            border: 2px dashed #8ecae6;
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 20px;
+            width: 100%;
+            text-align: left;
+        }
+        .rule-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1rem;
+            color: #2c3e50;
+            font-weight: 600;
+            margin-bottom: 10px;
+            line-height: 1.3;
+        }
+        .rule-item:last-child { margin-bottom: 0; }
+        .rule-icon { font-size: 1.5rem; }
+
+        .controls-info-new {
+            display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;
+        }
+        .key-badge-new {
+            background: #fff; border: 3px solid #ccc; border-bottom: 6px solid #999;
+            padding: 8px 15px; border-radius: 10px; font-weight: 800; font-size: 1rem;
+            display: flex; flex-direction: column; align-items: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.2s;
+        }
+        .key-badge-new:hover { transform: translateY(-2px); border-bottom-color: #666; }
+        .key-badge-new span { font-size: 0.8rem; color: #666; margin-top: 3px; }
+
+        .btn-start {
+            background: linear-gradient(to bottom, #ffb703, #f39c12);
+            border: 4px solid #fff;
+            padding: 15px 40px;
+            font-size: 1.5rem;
+            border-radius: 50px;
+            box-shadow: 0 8px 0 #d35400, 0 15px 20px rgba(0,0,0,0.2);
+            animation: pulseStart 1.5s infinite alternate;
+            font-family: var(--font-heading);
+            color: #fff;
+            cursor: pointer;
+            letter-spacing: 1px;
+        }
+        .btn-start:active { transform: translateY(8px); box-shadow: 0 0 0 #d35400; }
+        @keyframes pulseStart {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.05); }
+        }
+
+        /* ===== GAME OVER SCREEN ===== */
+        #screen-gameover {
+            background: linear-gradient(135deg, #1a0a0a, #3d1414, #1c2b40);
+        }
+
+        .go-bg-wave {
+            position: absolute; bottom: 0; left: 0; width: 200%; height: 50%;
+            background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 1000 300" xmlns="http://www.w3.org/2000/svg"><path d="M0 300 L0 150 Q 250 50 500 150 T 1000 150 L 1000 300 Z" fill="%23e74c3c" opacity="0.3"/></svg>') repeat-x;
+            background-size: 500px 100%;
+            animation: waveAnimGO 15s linear infinite;
+            z-index: 1;
+        }
+        @keyframes waveAnimGO { 
+            0% { transform: translateX(0); } 
+            100% { transform: translateX(-500px); } 
+        }
+
+        .go-rain {
+            position: absolute; top: -100%; left: 0; width: 100%; height: 100%;
+            background-image: 
+                linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 100%),
+                linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 100%);
+            background-size: 2px 100px, 3px 150px;
+            background-repeat: repeat;
+            background-position: 10% 0, 50% 0;
+            animation: rainFall 1s linear infinite;
+            z-index: 2;
+            opacity: 0.3;
+        }
+        @keyframes rainFall {
+            0% { background-position: 10% -100px, 50% -150px; }
+            100% { background-position: 10% 100vh, 50% 100vh; }
+        }
+
+        .go-panel {
+            background: rgba(255, 245, 245, 0.95);
+            border: 6px solid #e74c3c;
+            box-shadow: 0 15px 0 #922b21, 0 25px 50px rgba(0,0,0,0.8);
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 600px;
+            width: 90%;
+            padding: 40px 30px;
+            border-radius: 30px;
+            animation: goPopIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            margin: auto;
+        }
+        @keyframes goPopIn {
+            0% { transform: scale(0.6) translateY(100px); opacity: 0; }
+            100% { transform: scale(1) translateY(0); opacity: 1; }
+        }
+
+        .go-sad-emoji {
+            font-size: 90px;
+            line-height: 1;
+            margin-bottom: -10px;
+            animation: floatSad 2s infinite ease-in-out;
+            filter: drop-shadow(0 10px 10px rgba(0,0,0,0.3));
+        }
+        @keyframes floatSad { 
+            0%, 100% { transform: translateY(0) scale(1) rotate(-5deg); } 
+            50% { transform: translateY(-20px) scale(1.1) rotate(5deg); } 
+        }
+
+        .go-title {
+            font-family: var(--font-heading);
+            font-size: 3.8rem;
+            color: #fff;
+            -webkit-text-stroke: 3px #c0392b;
+            text-shadow: 0 6px 0 #922b21, 0 12px 20px rgba(0,0,0,0.5);
+            margin: 15px 0;
+            text-align: center;
+            letter-spacing: 2px;
+            animation: shakeTitle 0.4s infinite alternate;
+        }
+        @keyframes shakeTitle {
+            0% { transform: rotate(-2deg) translateX(-5px); }
+            100% { transform: rotate(2deg) translateX(5px); }
+        }
+
+        .go-text {
+            font-family: var(--font-body);
+            font-size: 1.3rem;
+            color: #2c3e50;
+            text-align: center;
+            font-weight: 700;
+            line-height: 1.5;
+            margin-bottom: 30px;
+            background: #fff;
+            padding: 15px 25px;
+            border-radius: 15px;
+            border: 2px dashed #e74c3c;
+        }
+
+        .btn-retry {
+            background: linear-gradient(to bottom, #ffb703, #f39c12);
+            box-shadow: 0 8px 0 #d35400, 0 15px 20px rgba(0,0,0,0.3);
+            animation: pulseRetry 1s infinite alternate;
+            font-size: 1.5rem;
+            padding: 15px 40px;
+        }
+        @keyframes pulseRetry {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.05); }
+        }
+        .btn-retry:active {
+            transform: translateY(8px) scale(1) !important;
+            box-shadow: 0 0 0 #d35400 !important;
+        }
+
+        /* ===== WIN SCREEN ===== */
+        #screen-win {
+            background: radial-gradient(circle, #a8e6cf 0%, #dcedc1 40%, #ffd3b6 100%);
+        }
+
+        .win-panel {
+            background: rgba(255, 255, 255, 0.95);
+            border: 6px solid #2ecc71;
+            box-shadow: 0 15px 0 #27ae60, 0 25px 50px rgba(0,0,0,0.3);
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 650px;
+            width: 90%;
+            padding: 40px 30px;
+            border-radius: 30px;
+            animation: winPopIn 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            margin: auto;
+        }
+        @keyframes winPopIn {
+            0% { transform: scale(0.5) rotate(-10deg); opacity: 0; }
+            70% { transform: scale(1.05) rotate(2deg); }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+
+        .win-emoji {
+            font-size: 100px;
+            line-height: 1;
+            margin-bottom: -15px;
+            animation: spinJump 2s infinite ease-in-out;
+            filter: drop-shadow(0 15px 15px rgba(0,0,0,0.2));
+        }
+        @keyframes spinJump {
+            0%, 100% { transform: translateY(0) scale(1) rotate(0deg); }
+            25% { transform: translateY(-30px) scale(1.1) rotate(-15deg); }
+            50% { transform: translateY(0) scale(1) rotate(0deg); }
+            75% { transform: translateY(-20px) scale(1.1) rotate(15deg); }
+        }
+
+        .win-title {
+            font-family: var(--font-heading);
+            font-size: 3.8rem;
+            color: #fff;
+            -webkit-text-stroke: 3px #2ecc71;
+            text-shadow: 0 6px 0 #27ae60, 0 10px 20px rgba(0,0,0,0.3);
+            margin: 10px 0 20px 0;
+            text-align: center;
+            animation: bounceText 1s infinite alternate;
+            word-wrap: break-word;
+            line-height: 1.1;
+        }
+        @keyframes bounceText {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-10px); }
+        }
+        @media (max-width: 768px) {
+            .win-title { font-size: 2.5rem; }
+            .win-panel { padding: 20px; }
+        }
+
+        .win-stats-box {
+            background: #fff8e1;
+            border: 3px dashed #f1c40f;
+            padding: 20px 30px;
+            border-radius: 20px;
+            margin-bottom: 25px;
+            width: 100%;
+            box-shadow: inset 0 0 20px rgba(241, 196, 15, 0.2);
+        }
+        .win-stat-item {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: var(--text-dark);
+            margin: 10px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .win-stat-value {
+            color: #e67e22;
+            font-size: 1.8rem;
+            background: #fff;
+            padding: 5px 15px;
+            border-radius: 10px;
+            border: 2px solid #f39c12;
+            box-shadow: 0 4px 0 #f39c12;
+            animation: popValue 0.5s ease-out;
+        }
+        @keyframes popValue {
+            0% { transform: scale(0); }
+            100% { transform: scale(1); }
+        }
+
+        .floating-particle {
+            position: absolute;
+            z-index: 1;
+            pointer-events: none;
+        }
+        .particle-star {
+            font-size: 25px;
+            animation: floatStar linear infinite;
+        }
+        @keyframes floatStar {
+            0% { transform: translateY(100vh) scale(0.5) rotate(0deg); opacity: 0; }
+            20% { opacity: 1; }
+            80% { opacity: 1; }
+            100% { transform: translateY(-100px) scale(1.5) rotate(360deg); opacity: 0; }
+        }
+        .particle-confetti {
+            width: 12px; height: 12px;
+            animation: confettiFall linear infinite;
+        }
+        @keyframes confettiFall {
+            0% { transform: translateY(-100px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="audio-controls">
+        <button class="audio-btn" id="btn-music" title="Musik">🎵</button>
+        <button class="audio-btn" id="btn-sfx" title="Suara">🔊</button>
+    </div>
+
+    <div id="game-container">
+        <div class="bg-layer">
+            <div class="sun"></div>
+            <div class="cloud cloud1"></div>
+            <div class="mountains"></div>
+        </div>
+
+        <div id="game-world">
+            <div class="ground"></div>
+            
+            <!-- MOUNTAIN PEAK BACKGROUND -->
+            <div class="mountain-peak">
+                <svg viewBox="0 0 2000 400" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="mountGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="#2ecc71"/>
+                            <stop offset="100%" stop-color="#27ae60"/>
+                        </linearGradient>
+                    </defs>
+                    <!-- Main Mountain Body -->
+                    <path d="M 0 400 L 0 400 Q 300 400 600 250 Q 900 100 1200 100 L 2000 100 L 2000 400 Z" fill="url(#mountGrad)" stroke="#fff" stroke-width="5"/>
+                    <!-- Mountain Plateau Grass detail -->
+                    <rect x="1200" y="95" width="800" height="10" fill="#f1c40f"/>
+                    <!-- Rocky details on the slope -->
+                    <path d="M 700 250 Q 750 200 800 250" stroke="#bdc3c7" stroke-width="4" fill="none"/>
+                    <path d="M 900 150 Q 950 120 1000 150" stroke="#bdc3c7" stroke-width="4" fill="none"/>
+                </svg>
+            </div>
+            
+            <!-- Evacuation Post -->
+            <div class="posko-evacuation">
+                <svg viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%; filter: drop-shadow(0 10px 10px rgba(0,0,0,0.4));">
+                    <!-- Main Tent -->
+                    <polygon points="20,140 100,20 180,140" fill="#e74c3c" stroke="#c0392b" stroke-width="4"/>
+                    <!-- Tent Front Opening -->
+                    <polygon points="70,140 100,70 130,140" fill="#fff" stroke="#bdc3c7" stroke-width="4"/>
+                    <!-- Red Cross on Tent -->
+                    <rect x="90" y="40" width="20" height="60" fill="#fff" rx="2"/>
+                    <rect x="70" y="60" width="60" height="20" fill="#fff" rx="2"/>
+                    <!-- Flag Pole -->
+                    <rect x="150" y="10" width="6" height="80" fill="#333"/>
+                    <!-- Flag -->
+                    <polygon points="156,10 190,25 156,40" fill="#f1c40f" stroke="#d35400" stroke-width="2"/>
+                    <!-- Text Box -->
+                    <rect x="40" y="110" width="120" height="30" fill="#2ecc71" rx="10" stroke="#fff" stroke-width="3"/>
+                    <text x="100" y="130" font-family="Arial" font-size="14" font-weight="bold" fill="#fff" text-anchor="middle">POSKO EVAKUASI</text>
+                </svg>
+            </div>
+
+            <!-- NPC Penjaga Posko (Kiri) -->
+            <div class="guard-npc guard-left">
+                <svg viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%;">
+                    <!-- Kaki -->
+                    <rect x="35" y="90" width="10" height="25" fill="#5b2c6f" rx="3"/>
+                    <rect x="55" y="90" width="10" height="25" fill="#5b2c6f" rx="3"/>
+                    <!-- Badan & Rompi -->
+                    <rect x="25" y="55" width="50" height="40" fill="#f39c12" rx="10"/>
+                    <rect x="30" y="60" width="40" height="30" fill="#ecf0f1" rx="5"/>
+                    <line x1="50" y1="60" x2="50" y2="90" stroke="#333" stroke-width="2"/>
+                    <!-- Kepala -->
+                    <circle cx="50" cy="35" r="20" fill="#8e44ad"/>
+                    <!-- Topi/Helm -->
+                    <path d="M 25 35 Q 50 5 75 35 Z" fill="#f1c40f"/>
+                    <!-- Wajah -->
+                    <circle cx="42" cy="35" r="3" fill="#000"/>
+                    <circle cx="58" cy="35" r="3" fill="#000"/>
+                    <path d="M 45 45 Q 50 48 55 45" stroke="#000" stroke-width="2" fill="none"/>
+                    <!-- Tangan Menunjuk -->
+                    <path d="M 25 65 L 10 75" stroke="#f39c12" stroke-width="8" stroke-linecap="round"/>
+                    <path d="M 75 65 L 85 55" stroke="#f39c12" stroke-width="8" stroke-linecap="round"/>
+                </svg>
+            </div>
+
+            <!-- NPC Penjaga Posko (Kanan) -->
+            <div class="guard-npc guard-right">
+                <svg viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%;">
+                    <!-- Kaki -->
+                    <rect x="35" y="90" width="10" height="25" fill="#5b2c6f" rx="3"/>
+                    <rect x="55" y="90" width="10" height="25" fill="#5b2c6f" rx="3"/>
+                    <!-- Badan & Rompi -->
+                    <rect x="25" y="55" width="50" height="40" fill="#3498db" rx="10"/>
+                    <rect x="30" y="60" width="40" height="30" fill="#ecf0f1" rx="5"/>
+                    <line x1="50" y1="60" x2="50" y2="90" stroke="#333" stroke-width="2"/>
+                    <!-- Kepala -->
+                    <circle cx="50" cy="35" r="20" fill="#e67e22"/>
+                    <!-- Telinga -->
+                    <polygon points="30,25 25,10 40,20" fill="#e67e22"/>
+                    <polygon points="70,25 75,10 60,20" fill="#e67e22"/>
+                    <!-- Topi/Helm -->
+                    <path d="M 25 35 Q 50 5 75 35 Z" fill="#f1c40f"/>
+                    <!-- Wajah -->
+                    <circle cx="42" cy="35" r="3" fill="#000"/>
+                    <circle cx="58" cy="35" r="3" fill="#000"/>
+                    <path d="M 45 45 Q 50 48 55 45" stroke="#000" stroke-width="2" fill="none"/>
+                    <!-- Tangan -->
+                    <path d="M 25 65 L 15 55" stroke="#3498db" stroke-width="8" stroke-linecap="round"/>
+                    <path d="M 75 65 L 90 75" stroke="#3498db" stroke-width="8" stroke-linecap="round"/>
+                </svg>
+            </div>
+
+            <!-- Sign at the start of the hill -->
+            <div class="evac-sign" style="left: 5800px; bottom: 21%;">JALUR EVAKUASI</div>
+
+            <!-- Trees on the hill -->
+            <div class="hill-tree" style="left: 6300px; bottom: calc(20% + 75px);"></div>
+            <div class="hill-tree" style="left: 6600px; bottom: calc(20% + 150px);"></div>
+            <div class="hill-tree" style="left: 6900px; bottom: calc(20% + 225px);"></div>
+            <div class="hill-tree" style="left: 7800px; bottom: calc(20% + 300px);"></div>
+            
+            <!-- MASSIVE TSUNAMI WALL -->
+            <div class="tsunami-entity" id="tsunami-entity">
+                <div class="tsunami-wave-front"></div>
+                
+                <!-- Splashes -->
+                <div class="splash-container">
+                    <div class="splash"></div>
+                    <div class="splash"></div>
+                    <div class="splash"></div>
+                    <div class="splash"></div>
+                    <div class="splash"></div>
+                </div>
+                
+                <!-- Sharks -->
+                <div class="shark shark-1">
+                    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%;">
+                        <path d="M10 60 Q 40 30 80 40 Q 95 50 90 70 Q 80 80 40 70 Q 20 80 10 60" fill="#7f8c8d"/>
+                        <path d="M10 60 Q 40 45 80 50 Q 90 60 90 70 Q 80 80 40 70 Q 20 80 10 60" fill="#ecf0f1"/>
+                        <polygon points="50,40 60,20 70,45" fill="#7f8c8d"/>
+                        <polygon points="80,40 100,20 95,50 100,80 80,70" fill="#7f8c8d"/>
+                        <circle cx="25" cy="55" r="3" fill="#000"/>
+                        <path d="M15 65 Q 25 70 35 65" stroke="#000" stroke-width="2" fill="none"/>
+                        <path d="M15 65 L 20 68 L 25 65 L 30 68 L 35 65" stroke="#000" stroke-width="1" fill="none"/>
+                    </svg>
+                </div>
+                <div class="shark shark-2">
+                    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%; transform: scaleX(-1);">
+                        <path d="M10 60 Q 40 30 80 40 Q 95 50 90 70 Q 80 80 40 70 Q 20 80 10 60" fill="#7f8c8d"/>
+                        <path d="M10 60 Q 40 45 80 50 Q 90 60 90 70 Q 80 80 40 70 Q 20 80 10 60" fill="#ecf0f1"/>
+                        <polygon points="50,40 60,20 70,45" fill="#7f8c8d"/>
+                        <polygon points="80,40 100,20 95,50 100,80 80,70" fill="#7f8c8d"/>
+                        <circle cx="25" cy="55" r="3" fill="#000"/>
+                        <path d="M15 65 Q 25 70 35 65" stroke="#000" stroke-width="2" fill="none"/>
+                        <path d="M15 65 L 20 68 L 25 65 L 30 68 L 35 65" stroke="#000" stroke-width="1" fill="none"/>
+                    </svg>
+                </div>
+                <div class="shark shark-3">
+                    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%;">
+                        <path d="M10 60 Q 40 30 80 40 Q 95 50 90 70 Q 80 80 40 70 Q 20 80 10 60" fill="#7f8c8d"/>
+                        <path d="M10 60 Q 40 45 80 50 Q 90 60 90 70 Q 80 80 40 70 Q 20 80 10 60" fill="#ecf0f1"/>
+                        <polygon points="50,40 60,20 70,45" fill="#7f8c8d"/>
+                        <polygon points="80,40 100,20 95,50 100,80 80,70" fill="#7f8c8d"/>
+                        <circle cx="25" cy="55" r="3" fill="#000"/>
+                        <path d="M15 65 Q 25 70 35 65" stroke="#000" stroke-width="2" fill="none"/>
+                        <path d="M15 65 L 20 68 L 25 65 L 30 68 L 35 65" stroke="#000" stroke-width="1" fill="none"/>
+                    </svg>
+                </div>
+                
+                <!-- Boats -->
+                <div class="boat boat-1">
+                    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%;">
+                        <path d="M10 70 L 90 70 L 80 90 L 20 90 Z" fill="#e74c3c" stroke="#c0392b" stroke-width="2"/>
+                        <rect x="35" y="40" width="40" height="30" fill="#fff" stroke="#bdc3c7" stroke-width="2"/>
+                        <rect x="40" y="45" width="10" height="15" fill="#85c1e9"/>
+                        <rect x="60" y="45" width="10" height="15" fill="#85c1e9"/>
+                        <rect x="30" y="35" width="50" height="10" fill="#f39c12"/>
+                        <line x1="55" y1="35" x2="55" y2="10" stroke="#333" stroke-width="3"/>
+                    </svg>
+                </div>
+                <div class="boat boat-2">
+                    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%;">
+                        <path d="M10 70 L 90 70 L 80 90 L 20 90 Z" fill="#e74c3c" stroke="#c0392b" stroke-width="2"/>
+                        <rect x="35" y="40" width="40" height="30" fill="#fff" stroke="#bdc3c7" stroke-width="2"/>
+                        <rect x="40" y="45" width="10" height="15" fill="#85c1e9"/>
+                        <rect x="60" y="45" width="10" height="15" fill="#85c1e9"/>
+                        <rect x="30" y="35" width="50" height="10" fill="#f39c12"/>
+                        <line x1="55" y1="35" x2="55" y2="10" stroke="#333" stroke-width="3"/>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Trees & Houses -->
+            <div class="house" style="left: 600px; width: 130px; height: 60px;"></div>
+            <div class="house" style="left: 1500px; width: 130px; height: 100px;"></div>
+            <div class="house" style="left: 2400px; width: 130px; height: 80px;"></div>
+            <div class="house" style="left: 3400px; width: 130px; height: 120px;"></div>
+            <div class="house" style="left: 4400px; width: 130px; height: 60px;"></div>
+            <div class="house" style="left: 5600px; width: 130px; height: 90px;"></div>
+
+            <!-- NPCs (Enemies) -->
+            <div class="npc-crab" style="left: 400px;">
+                <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%;">
+                    <path d="M20 70 Q 10 80 15 90" stroke="#c0392b" stroke-width="6" fill="none" stroke-linecap="round"/>
+                    <path d="M30 75 Q 20 85 25 95" stroke="#c0392b" stroke-width="6" fill="none" stroke-linecap="round"/>
+                    <path d="M80 70 Q 90 80 85 90" stroke="#c0392b" stroke-width="6" fill="none" stroke-linecap="round"/>
+                    <path d="M70 75 Q 80 85 75 95" stroke="#c0392b" stroke-width="6" fill="none" stroke-linecap="round"/>
+                    <ellipse cx="50" cy="65" rx="35" ry="25" fill="#e74c3c"/>
+                    <ellipse cx="50" cy="70" rx="25" ry="15" fill="#f5b041"/>
+                    <circle cx="40" cy="50" r="7" fill="#fff"/>
+                    <circle cx="60" cy="50" r="7" fill="#fff"/>
+                    <circle cx="40" cy="50" r="3" fill="#000"/>
+                    <circle cx="60" cy="50" r="3" fill="#000"/>
+                    <path d="M45 60 Q 50 65 55 60" stroke="#000" stroke-width="2" fill="none"/>
+                    <path d="M15 50 Q 5 30 20 20 Q 30 20 30 30 Q 25 35 20 30" fill="#e74c3c" stroke="#c0392b" stroke-width="4"/>
+                    <path d="M85 50 Q 95 30 80 20 Q 70 20 70 30 Q 75 35 80 30" fill="#e74c3c" stroke="#c0392b" stroke-width="4"/>
+                </svg>
+            </div>
+            <div class="npc-bird" style="left: 900px;">
+                <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%;">
+                    <path d="M10 50 Q 30 20 50 40 Q 40 60 10 50" fill="#ecf0f1" stroke="#bdc3c7" stroke-width="2"/>
+                    <path d="M90 50 Q 70 20 50 40 Q 60 60 90 50" fill="#ecf0f1" stroke="#bdc3c7" stroke-width="2"/>
+                    <ellipse cx="50" cy="50" rx="15" ry="25" fill="#fff" stroke="#bdc3c7" stroke-width="2"/>
+                    <polygon points="50,45 30,50 50,55" fill="#f39c12"/>
+                    <circle cx="45" cy="45" r="3" fill="#000"/>
+                </svg>
+            </div>
+            <div class="npc-crab" style="left: 1600px;">
+                <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%;">
+                    <path d="M20 70 Q 10 80 15 90" stroke="#c0392b" stroke-width="6" fill="none" stroke-linecap="round"/>
+                    <path d="M30 75 Q 20 85 25 95" stroke="#c0392b" stroke-width="6" fill="none" stroke-linecap="round"/>
+                    <path d="M80 70 Q 90 80 85 90" stroke="#c0392b" stroke-width="6" fill="none" stroke-linecap="round"/>
+                    <path d="M70 75 Q 80 85 75 95" stroke="#c0392b" stroke-width="6" fill="none" stroke-linecap="round"/>
+                    <ellipse cx="50" cy="65" rx="35" ry="25" fill="#e74c3c"/>
+                    <ellipse cx="50" cy="70" rx="25" ry="15" fill="#f5b041"/>
+                    <circle cx="40" cy="50" r="7" fill="#fff"/>
+                    <circle cx="60" cy="50" r="7" fill="#fff"/>
+                    <circle cx="40" cy="50" r="3" fill="#000"/>
+                    <circle cx="60" cy="50" r="3" fill="#000"/>
+                    <path d="M45 60 Q 50 65 55 60" stroke="#000" stroke-width="2" fill="none"/>
+                    <path d="M15 50 Q 5 30 20 20 Q 30 20 30 30 Q 25 35 20 30" fill="#e74c3c" stroke="#c0392b" stroke-width="4"/>
+                    <path d="M85 50 Q 95 30 80 20 Q 70 20 70 30 Q 75 35 80 30" fill="#e74c3c" stroke="#c0392b" stroke-width="4"/>
+                </svg>
+            </div>
+            <div class="npc-bird" style="left: 2300px;">
+                <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%;">
+                    <path d="M10 50 Q 30 20 50 40 Q 40 60 10 50" fill="#ecf0f1" stroke="#bdc3c7" stroke-width="2"/>
+                    <path d="M90 50 Q 70 20 50 40 Q 60 60 90 50" fill="#ecf0f1" stroke="#bdc3c7" stroke-width="2"/>
+                    <ellipse cx="50" cy="50" rx="15" ry="25" fill="#fff" stroke="#bdc3c7" stroke-width="2"/>
+                    <polygon points="50,45 30,50 50,55" fill="#f39c12"/>
+                    <circle cx="45" cy="45" r="3" fill="#000"/>
+                </svg>
+            </div>
+            <div class="npc-crab" style="left: 3100px;">
+                <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%;">
+                    <path d="M20 70 Q 10 80 15 90" stroke="#c0392b" stroke-width="6" fill="none" stroke-linecap="round"/>
+                    <path d="M30 75 Q 20 85 25 95" stroke="#c0392b" stroke-width="6" fill="none" stroke-linecap="round"/>
+                    <path d="M80 70 Q 90 80 85 90" stroke="#c0392b" stroke-width="6" fill="none" stroke-linecap="round"/>
+                    <path d="M70 75 Q 80 85 75 95" stroke="#c0392b" stroke-width="6" fill="none" stroke-linecap="round"/>
+                    <ellipse cx="50" cy="65" rx="35" ry="25" fill="#e74c3c"/>
+                    <ellipse cx="50" cy="70" rx="25" ry="15" fill="#f5b041"/>
+                    <circle cx="40" cy="50" r="7" fill="#fff"/>
+                    <circle cx="60" cy="50" r="7" fill="#fff"/>
+                    <circle cx="40" cy="50" r="3" fill="#000"/>
+                    <circle cx="60" cy="50" r="3" fill="#000"/>
+                    <path d="M45 60 Q 50 65 55 60" stroke="#000" stroke-width="2" fill="none"/>
+                    <path d="M15 50 Q 5 30 20 20 Q 30 20 30 30 Q 25 35 20 30" fill="#e74c3c" stroke="#c0392b" stroke-width="4"/>
+                    <path d="M85 50 Q 95 30 80 20 Q 70 20 70 30 Q 75 35 80 30" fill="#e74c3c" stroke="#c0392b" stroke-width="4"/>
+                </svg>
+            </div>
+            <div class="npc-bird" style="left: 3800px;">
+                <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%;">
+                    <path d="M10 50 Q 30 20 50 40 Q 40 60 10 50" fill="#ecf0f1" stroke="#bdc3c7" stroke-width="2"/>
+                    <path d="M90 50 Q 70 20 50 40 Q 60 60 90 50" fill="#ecf0f1" stroke="#bdc3c7" stroke-width="2"/>
+                    <ellipse cx="50" cy="50" rx="15" ry="25" fill="#fff" stroke="#bdc3c7" stroke-width="2"/>
+                    <polygon points="50,45 30,50 50,55" fill="#f39c12"/>
+                    <circle cx="45" cy="45" r="3" fill="#000"/>
+                </svg>
+            </div>
+            <div class="npc-crab" style="left: 4600px;">
+                <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%;">
+                    <path d="M20 70 Q 10 80 15 90" stroke="#c0392b" stroke-width="6" fill="none" stroke-linecap="round"/>
+                    <path d="M30 75 Q 20 85 25 95" stroke="#c0392b" stroke-width="6" fill="none" stroke-linecap="round"/>
+                    <path d="M80 70 Q 90 80 85 90" stroke="#c0392b" stroke-width="6" fill="none" stroke-linecap="round"/>
+                    <path d="M70 75 Q 80 85 75 95" stroke="#c0392b" stroke-width="6" fill="none" stroke-linecap="round"/>
+                    <ellipse cx="50" cy="65" rx="35" ry="25" fill="#e74c3c"/>
+                    <ellipse cx="50" cy="70" rx="25" ry="15" fill="#f5b041"/>
+                    <circle cx="40" cy="50" r="7" fill="#fff"/>
+                    <circle cx="60" cy="50" r="7" fill="#fff"/>
+                    <circle cx="40" cy="50" r="3" fill="#000"/>
+                    <circle cx="60" cy="50" r="3" fill="#000"/>
+                    <path d="M45 60 Q 50 65 55 60" stroke="#000" stroke-width="2" fill="none"/>
+                    <path d="M15 50 Q 5 30 20 20 Q 30 20 30 30 Q 25 35 20 30" fill="#e74c3c" stroke="#c0392b" stroke-width="4"/>
+                    <path d="M85 50 Q 95 30 80 20 Q 70 20 70 30 Q 75 35 80 30" fill="#e74c3c" stroke="#c0392b" stroke-width="4"/>
+                </svg>
+            </div>
+            <div class="npc-bird" style="left: 5400px;">
+                <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%;">
+                    <path d="M10 50 Q 30 20 50 40 Q 40 60 10 50" fill="#ecf0f1" stroke="#bdc3c7" stroke-width="2"/>
+                    <path d="M90 50 Q 70 20 50 40 Q 60 60 90 50" fill="#ecf0f1" stroke="#bdc3c7" stroke-width="2"/>
+                    <ellipse cx="50" cy="50" rx="15" ry="25" fill="#fff" stroke="#bdc3c7" stroke-width="2"/>
+                    <polygon points="50,45 30,50 50,55" fill="#f39c12"/>
+                    <circle cx="45" cy="45" r="3" fill="#000"/>
+                </svg>
+            </div>
+
+            <!-- Friends (to rescue) -->
+            <div class="friend" id="friend-1" style="left: 1100px;">🐰</div>
+            <div class="friend" id="friend-2" style="left: 2900px;">🐢</div>
+            <div class="friend" id="friend-3" style="left: 4900px;">🐦</div>
+
+            <!-- Quiz Boxes -->
+            <div class="obstacle" id="obs-1" style="left: 630px; bottom: calc(20% + 70px);"></div>
+            <div class="obstacle" id="obs-2" style="left: 2100px; bottom: calc(20% + 30px);"></div>
+            <div class="obstacle" id="obs-3" style="left: 2430px; bottom: calc(20% + 90px);"></div>
+            <div class="obstacle" id="obs-4" style="left: 3430px; bottom: calc(20% + 130px);"></div>
+            <div class="obstacle" id="obs-5" style="left: 4600px; bottom: calc(20% + 30px);"></div>
+
+            <!-- MPUS / TIMOT (Desain Baru) -->
+            <svg id="mpus" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <!-- Ekor -->
+                <path d="M 25 65 Q 5 60 15 45" stroke="#e67e22" stroke-width="8" fill="none" stroke-linecap="round"/>
+                <!-- Kaki -->
+                <rect x="30" y="80" width="12" height="20" rx="6" fill="#d35400"/>
+                <rect x="55" y="80" width="12" height="20" rx="6" fill="#d35400"/>
+                <!-- Badan -->
+                <ellipse cx="50" cy="70" rx="28" ry="22" fill="#f39c12"/>
+                <!-- Rompi -->
+                <path d="M 28 58 Q 50 80 72 58 L 68 75 Q 50 85 32 75 Z" fill="#3498db"/>
+                <!-- Tas Ransel -->
+                <rect x="70" y="55" width="20" height="25" rx="5" fill="#2980b9"/>
+                <path d="M 70 60 Q 60 60 55 65" stroke="#2980b9" stroke-width="4" fill="none"/>
+                <!-- Kepala -->
+                <circle cx="50" cy="42" r="24" fill="#f39c12"/>
+                <!-- Telinga -->
+                <polygon points="30,25 20,5 42,20" fill="#f39c12"/>
+                <polygon points="32,22 24,10 38,18" fill="#f5b041"/>
+                <polygon points="70,25 80,5 58,20" fill="#f39c12"/>
+                <polygon points="68,22 76,10 62,18" fill="#f5b041"/>
+                <!-- Helm -->
+                <path d="M 24 35 Q 50 5 76 35 L 72 32 Q 50 15 28 32 Z" fill="#f1c40f" stroke="#f39c12" stroke-width="2"/>
+                <path d="M 24 35 Q 50 35 76 35" stroke="#f1c40f" stroke-width="6" stroke-linecap="round"/>
+                <!-- Lampu Helm -->
+                <circle cx="50" cy="15" r="4" fill="#e74c3c"/>
+                <!-- Wajah -->
+                <ellipse cx="40" cy="45" rx="6" ry="8" fill="#fff"/>
+                <ellipse cx="60" cy="45" rx="6" ry="8" fill="#fff"/>
+                <circle cx="40" cy="45" r="3" fill="#000"/>
+                <circle cx="60" cy="45" r="3" fill="#000"/>
+                <!-- Pipi Merona -->
+                <ellipse cx="32" cy="52" rx="4" ry="3" fill="#ff9999" opacity="0.6"/>
+                <ellipse cx="68" cy="52" rx="4" ry="3" fill="#ff9999" opacity="0.6"/>
+                <!-- Hidung & Mulut -->
+                <polygon points="48,52 52,52 50,55" fill="#e74c3c"/>
+                <path d="M 45 58 Q 50 62 55 58" stroke="#000" stroke-width="2" fill="none" stroke-linecap="round"/>
+            </svg>
+        </div>
+
+        <div id="ui-layer">
+            <div class="hud">
+                <div id="lives-container">
+                    <span class="heart">❤️</span>
+                    <span class="heart">❤️</span>
+                    <span class="heart">❤️</span>
+                </div>
+                <span class="star-hud">⭐ <span id="star-count">0</span></span>
+                <span class="friend-hud">👥 <span id="rescued-count">0</span>/3</span>
+            </div>
+
+            <div id="tsunami-indicator" class="hidden">⚠️ TSUNAMI MENDEKAT! ⚠️</div>
+
+            <div id="quiz-modal">
+                <div class="quiz-content">
+                    <div class="timer-container"><div class="timer-bar" id="quiz-timer-bar"></div></div>
+                    <h3 id="quiz-title">PERTANYAAN</h3>
+                    <p id="quiz-question">...</p>
+                    <div class="options" id="quiz-options"></div>
+                    <div class="feedback-msg" id="quiz-feedback"></div>
+                </div>
+            </div>
+
+            <div id="mobile-controls">
+                <div class="dpad">
+                    <div class="control-btn" id="btn-left">A</div>
+                    <div class="control-btn" id="btn-right">D</div>
+                </div>
+                <div class="control-btn" id="btn-jump">Space</div>
+            </div>
+
+            <!-- MAIN MENU -->
+            <div class="screen active" id="screen-menu">
+                <div class="menu-bg-cloud m-cloud1"></div>
+                <div class="menu-bg-cloud m-cloud2"></div>
+
+                <div class="menu-panel-new">
+                    <div class="menu-left">
+                        <svg class="menu-mpus-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <!-- Ekor -->
+                            <path d="M 25 65 Q 5 60 15 45" stroke="#e67e22" stroke-width="8" fill="none" stroke-linecap="round"/>
+                            <!-- Kaki -->
+                            <rect x="30" y="80" width="12" height="20" rx="6" fill="#d35400"/>
+                            <rect x="55" y="80" width="12" height="20" rx="6" fill="#d35400"/>
+                            <!-- Badan -->
+                            <ellipse cx="50" cy="70" rx="28" ry="22" fill="#f39c12"/>
+                            <!-- Rompi -->
+                            <path d="M 28 58 Q 50 80 72 58 L 68 75 Q 50 85 32 75 Z" fill="#3498db"/>
+                            <!-- Tas Ransel -->
+                            <rect x="70" y="55" width="20" height="25" rx="5" fill="#2980b9"/>
+                            <path d="M 70 60 Q 60 60 55 65" stroke="#2980b9" stroke-width="4" fill="none"/>
+                            <!-- Kepala -->
+                            <circle cx="50" cy="42" r="24" fill="#f39c12"/>
+                            <!-- Telinga -->
+                            <polygon points="30,25 20,5 42,20" fill="#f39c12"/>
+                            <polygon points="32,22 24,10 38,18" fill="#f5b041"/>
+                            <polygon points="70,25 80,5 58,20" fill="#f39c12"/>
+                            <polygon points="68,22 76,10 62,18" fill="#f5b041"/>
+                            <!-- Helm -->
+                            <path d="M 24 35 Q 50 5 76 35 L 72 32 Q 50 15 28 32 Z" fill="#f1c40f" stroke="#f39c12" stroke-width="2"/>
+                            <path d="M 24 35 Q 50 35 76 35" stroke="#f1c40f" stroke-width="6" stroke-linecap="round"/>
+                            <!-- Lampu Helm -->
+                            <circle cx="50" cy="15" r="4" fill="#e74c3c"/>
+                            <!-- Wajah -->
+                            <ellipse cx="40" cy="45" rx="6" ry="8" fill="#fff"/>
+                            <ellipse cx="60" cy="45" rx="6" ry="8" fill="#fff"/>
+                            <circle cx="40" cy="45" r="3" fill="#000"/>
+                            <circle cx="60" cy="45" r="3" fill="#000"/>
+                            <!-- Pipi Merona -->
+                            <ellipse cx="32" cy="52" rx="4" ry="3" fill="#ff9999" opacity="0.6"/>
+                            <ellipse cx="68" cy="52" rx="4" ry="3" fill="#ff9999" opacity="0.6"/>
+                            <!-- Hidung & Mulut -->
+                            <polygon points="48,52 52,52 50,55" fill="#e74c3c"/>
+                            <path d="M 45 58 Q 50 62 55 58" stroke="#000" stroke-width="2" fill="none" stroke-linecap="round"/>
+                        </svg>
+                        <div class="speech-bubble">Timot siap jadi kapten siaga!</div>
+                    </div>
+
+                    <div class="menu-right">
+                        <h1>TAHU TAHU TSUNAMI!</h1>
+                        <h2>Tata Kelola Kesiapsiagaan Bencana</h2>
+                        
+                        <div class="rules-box">
+                            <div class="rule-item">
+                                <span class="rule-icon">🛡️</span>
+                                <span><b>Kebijakan:</b> Hindari rintangan dan jawab kuis dengan benar agar tsunami tidak mendekat!</span>
+                            </div>
+                            <div class="rule-item">
+                                <span class="rule-icon">🏢</span>
+                                <span><b>Lembaga:</b> Selamatkan warga (🐰 Bubu, 🐢 Koko, 🐦 Mimi) dengan mendekati mereka.</span>
+                            </div>
+                            <div class="rule-item">
+                                <span class="rule-icon">⚖️</span>
+                                <span><b>Hukum & Regulasi:</b> Kumpulkan bintang dengan menjawab soal UU & Regulasi kebencanaan!</span>
+                            </div>
+                        </div>
+
+                        <div class="controls-info-new">
+                            <div class="key-badge-new">D <span>Maju</span></div>
+                            <div class="key-badge-new">A <span>Mundur</span></div>
+                            <div class="key-badge-new">SPACE <span>Tahan = Tinggi</span></div>
+                        </div>
+
+                        <button class="btn-start" onclick="showScreen('screen-difficulty')">MULAI PETUALANGAN</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DIFFICULTY -->
+            <div class="screen" id="screen-difficulty">
+                <div class="menu-panel">
+                    <h1>PILIH KESULITAN</h1>
+                    <p>Pilih tingkat tantangan yang sesuai:</p>
+                    <div class="difficulty-options">
+                        <button class="diff-btn diff-easy" onclick="startGame('easy')">
+                            <span class="icon">😊</span><span class="label">MUDAH</span>
+                            <span class="desc">20s · 5 Nyawa</span>
+                        </button>
+                        <button class="diff-btn diff-normal" onclick="startGame('normal')">
+                            <span class="icon">😐</span><span class="label">NORMAL</span>
+                            <span class="desc">15s · 3 Nyawa</span>
+                        </button>
+                        <button class="diff-btn diff-hard" onclick="startGame('hard')">
+                            <span class="icon">😰</span><span class="label">SULIT</span>
+                            <span class="desc">10s · 2 Nyawa</span>
+                        </button>
+                    </div>
+                    <button class="btn btn-secondary" onclick="showScreen('screen-menu')">KEMBALI</button>
+                </div>
+            </div>
+
+            <!-- GAME OVER -->
+            <div class="screen" id="screen-gameover">
+                <div class="go-bg-wave"></div>
+                <div class="go-rain"></div>
+                
+                <div class="menu-panel go-panel">
+                    <div class="go-sad-emoji">😿</div>
+                    <h1 class="go-title">GAME OVER!</h1>
+                    <p class="go-text">Nyawa Timot habis! Tsunami berhasil menangkap Timot.<br>Jangan menyerah, Kapten! Ayo coba lagi dan belajar dari kesalahan!</p>
+                    
+                    <div style="display: flex; gap: 15px; flex-wrap: wrap; justify-content: center;">
+                        <button class="btn btn-retry" onclick="showScreen('screen-difficulty')">COBA LAGI</button>
+                        <button class="btn btn-secondary" onclick="showScreen('screen-menu')" style="box-shadow: 0 8px 0 #1a5276;">MENU UTAMA</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- WIN -->
+            <div class="screen" id="screen-win">
+                <div class="win-panel">
+                    <div class="win-emoji">🏆</div>
+                    <h1 class="win-title">SELAMAT, TIMOTKU!</h1>
+                    
+                    <div class="win-stats-box">
+                        <p style="font-size: 1.1rem; color: #666; margin-bottom: 15px; font-weight: 600; text-align: center;">Hebat! Kamu berhasil mencapai Posko Evakuasi dan lolos dari tsunami!</p>
+                        <div class="win-stat-item">
+                            <span>⭐ Bintang Terkumpul:</span>
+                            <span class="win-stat-value" id="final-stars">0</span>
+                        </div>
+                        <div class="win-stat-item">
+                            <span>👥 Warga Diselamatkan:</span>
+                            <span class="win-stat-value" id="final-rescued">0</span> <span style="font-size: 1.2rem;">/ 3</span>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 15px; flex-wrap: wrap; justify-content: center;">
+                        <button class="btn" onclick="restartGame()" style="animation: pulseRetry 1s infinite alternate; background: linear-gradient(to bottom, #2ecc71, #27ae60); box-shadow: 0 8px 0 #1e8449; font-size: 1.3rem; padding: 15px 35px;">MAIN LAGI</button>
+                        <button class="btn btn-secondary" onclick="showScreen('screen-menu')" style="box-shadow: 0 8px 0 #1a5276; font-size: 1.3rem; padding: 15px 35px;">MENU UTAMA</button>
+                    </div>
+                </div>
+                
+                <div id="win-particles" style="position: absolute; top:0; left:0; width:100%; height:100%; pointer-events: none; z-index: 1;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ================= AUDIO ENGINE =================
+        const AudioEngine = {
+            ctx: null, masterGain: null, musicGain: null, sfxGain: null,
+            isMusicPlaying: false, musicInterval: null, musicEnabled: true, sfxEnabled: true, tempo: 150,
+            
+            init() {
+                if (this.ctx) return;
+                this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                this.masterGain = this.ctx.createGain();
+                this.musicGain = this.ctx.createGain(); this.sfxGain = this.ctx.createGain();
+                this.musicGain.connect(this.masterGain); this.sfxGain.connect(this.masterGain);
+                this.masterGain.connect(this.ctx.destination);
+                this.masterGain.gain.value = 0.8; this.musicGain.gain.value = 0.2; this.sfxGain.gain.value = 0.4;
+            },
+
+            playTone(freq, type, duration, isMusic = false, vol = 1, slideTo = null) {
+                if (!this.ctx) this.init();
+                if (this.ctx.state === 'suspended') this.ctx.resume();
+                if ((isMusic && !this.musicEnabled) || (!isMusic && !this.sfxEnabled)) return;
+
+                const osc = this.ctx.createOscillator(); const gainNode = this.ctx.createGain();
+                osc.type = type; const now = this.ctx.currentTime;
+                osc.frequency.setValueAtTime(freq, now);
+                if (slideTo) osc.frequency.exponentialRampToValueAtTime(slideTo, now + duration);
+                
+                const targetGain = isMusic ? this.musicGain : this.sfxGain;
+                gainNode.connect(targetGain);
+                gainNode.gain.setValueAtTime(0, now);
+                gainNode.gain.linearRampToValueAtTime(vol, now + 0.02);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + duration);
+                
+                osc.connect(gainNode); osc.start(now); osc.stop(now + duration);
+            },
+
+            playClick() { this.playTone(600, 'sine', 0.1); },
+            playMeowHappy() {
+                this.playTone(500, 'sine', 0.15, false, 0.9, 750);
+                setTimeout(() => this.playTone(750, 'sine', 0.2, false, 0.9, 1000), 130);
+                setTimeout(() => this.playTone(1000, 'sine', 0.25, false, 0.8, 1200), 300);
+            },
+            playMeowSad() { 
+                this.playTone(700, 'sine', 0.3, false, 1, 350); 
+                setTimeout(() => this.playTone(400, 'sine', 0.5, false, 1, 200), 280);
+            },
+            playCorrect() { 
+                this.playTone(523.25, 'square', 0.15); 
+                setTimeout(() => this.playTone(659.25, 'square', 0.15), 100);
+                setTimeout(() => this.playTone(783.99, 'square', 0.3), 200);
+                setTimeout(() => this.playMeowHappy(), 400);
+            },
+            playRescue() {
+                this.playTone(800, 'sine', 0.1, false, 0.9);
+                setTimeout(() => this.playTone(1200, 'sine', 0.2, false, 0.9), 100);
+                setTimeout(() => this.playMeowHappy(), 250);
+            },
+            playJump() { this.playTone(300, 'square', 0.15, false, 0.6, 600); },
+            playWin() {
+                const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51];
+                notes.forEach((n, i) => setTimeout(() => this.playTone(n, 'square', 0.3, false, 0.8), i * 120));
+            },
+            
+             startMusic() {
+                if (this.isMusicPlaying) return;
+                this.isMusicPlaying = true;
+                this.playMenuMusic(); // Default ke menu music
+            },
+
+            playMenuMusic() {
+                if (!this.musicEnabled) return;
+                this.stopMusic();
+                this.isMusicPlaying = true;
+                let step = 0;
+                this.tempo = 250; // Tempo lebih lambat untuk menu (santai & megah)
+                
+                const menuMelody = [
+                    392.00, 523.25, 659.25, 523.25, 
+                    440.00, 523.25, 698.46, 523.25, 
+                    493.88, 587.33, 783.99, 587.33, 
+                    523.25, 659.25, 783.99, 1046.50 
+                ];
+                const menuBass = [
+                    130.81, 130.81, 174.61, 174.61,
+                    196.00, 196.00, 130.81, 130.81
+                ];
+
+                this.musicInterval = setInterval(() => {
+                    if(!this.musicEnabled) return;
+                    this.playTone(menuMelody[step % menuMelody.length], 'sine', 0.3, true, 0.15);
+                    if (step % 2 === 0) this.playTone(menuBass[(step/2) % menuBass.length], 'triangle', 0.4, true, 0.2);
+                    step++;
+                }, this.tempo);
+            },
+
+            playGameMusic() {
+                if (!this.musicEnabled) return;
+                this.stopMusic();
+                this.isMusicPlaying = true;
+                let step = 0;
+                
+                const gameMelody = [261.63, 329.63, 392.00, 523.25, 392.00, 329.63, 261.63, 329.63, 392.00, 523.25, 659.25, 523.25, 349.23, 440.00, 523.25, 698.46, 523.25, 440.00, 392.00, 493.88, 587.33, 783.99, 587.33, 493.88];
+                const gameBass = [130.81, 130.81, 130.81, 130.81, 130.81, 130.81, 130.81, 130.81, 174.61, 174.61, 174.61, 174.61, 196.00, 196.00, 196.00, 196.00];
+
+                this.musicInterval = setInterval(() => {
+                    if(!this.musicEnabled) return;
+                    this.playTone(gameMelody[step % gameMelody.length], 'square', 0.15, true, 0.15);
+                    if (step % 2 === 0) this.playTone(gameBass[(step/2) % gameBass.length], 'triangle', 0.2, true, 0.3);
+                    step++;
+                }, this.tempo);
+            },
+            stopMusic() { this.isMusicPlaying = false; clearInterval(this.musicInterval); },
+            toggleMusic() { this.musicEnabled = !this.musicEnabled; document.getElementById('btn-music').textContent = this.musicEnabled ? '🎵' : '🔇'; if (this.musicEnabled) this.startMusic(); else this.stopMusic(); },
+            toggleSfx() { this.sfxEnabled = !this.sfxEnabled; document.getElementById('btn-sfx').textContent = this.sfxEnabled ? '🔊' : '🔈'; }
+        };
+
+        // ================= CONFIG =================
+        const difficulties = {
+            easy: { time: 25, lives: 5, crabSpeed: 0.5, birdSpeed: 0.7, musicTempo: 180, tsunamiBaseSpeed: 0.5, tsunamiMistakeAdvance: 150 },
+            normal: { time: 18, lives: 3, crabSpeed: 0.8, birdSpeed: 1.0, musicTempo: 150, tsunamiBaseSpeed: 0.8, tsunamiMistakeAdvance: 250 },
+            hard: { time: 12, lives: 2, crabSpeed: 1.2, birdSpeed: 1.5, musicTempo: 110, tsunamiBaseSpeed: 1.1, tsunamiMistakeAdvance: 350 }
+        };
+
+        // World Data
+        const housesData = [
+            { x: 600, width: 130, y: 60 },
+            { x: 1500, width: 130, y: 100 },
+            { x: 2400, width: 130, y: 80 },
+            { x: 3400, width: 130, y: 120 },
+            { x: 4400, width: 130, y: 60 },
+            { x: 5600, width: 130, y: 90 },
+        ];
+
+        const friendsData = [
+            { id: 'friend-1', x: 1100, emoji: '🐰' },
+            { id: 'friend-2', x: 2900, emoji: '🐢' },
+            { id: 'friend-3', x: 4900, emoji: '🐦' },
+        ];
+
+        // ================= KUIS DATA =================
+        // Soal Normal & Mudah
+        const standardQuizzes = {
+            'obs-1': { 
+                title: "Kebijakan Mitigasi", 
+                question: "Apa kebijakan utama pemerintah dalam mitigasi tsunami di wilayah pesisir?", 
+                options: [
+                    { text: "Membangun tembok laut, jalur evakuasi, dan tempat evakuasi sementara.", correct: true }, 
+                    { text: "Menambah taman bermain di tepi pantai.", correct: false }, 
+                    { text: "Membiarkan warga tinggal di dekat pantai tanpa arahan.", correct: false }
+                ] 
+            },
+            'obs-2': { 
+                title: "Lembaga Resmi", 
+                question: "Lembaga resmi di Indonesia yang bertugas memberikan peringatan dini tsunami adalah...", 
+                options: [
+                    { text: "BMKG (Badan Meteorologi, Klimatologi, dan Geofisika).", correct: true }, 
+                    { text: "Kementerian Pariwisata dan Ekonomi Kreatif.", correct: false }, 
+                    { text: "Dinas Kebersihan Kota.", correct: false }
+                ] 
+            },
+            'obs-3': { 
+                title: "Hukum dan Regulasi", 
+                question: "Dasar hukum penyelenggaraan penanggulangan bencana di Indonesia adalah...", 
+                options: [
+                    { text: "UU No. 24 Tahun 2007 tentang Penanggulangan Bencana.", correct: true }, 
+                    { text: "UU No. 1 Tahun 1945 tentang Hukum Pidana.", correct: false }, 
+                    { text: "UU No. 22 Tahun 2009 tentang Lalu Lintas.", correct: false }
+                ] 
+            },
+            'obs-4': { 
+                title: "Lembaga & Prioritas", 
+                question: "Siapa yang harus diprioritaskan mendapatkan bantuan dan evakuasi saat bencana?", 
+                options: [
+                    { text: "Kelompok rentan seperti anak-anak, lansia, dan penyandang disabilitas.", correct: true }, 
+                    { text: "Orang dewasa yang memiliki kendaraan cepat.", correct: false }, 
+                    { text: "Pemilik rumah yang paling dekat dengan pantai.", correct: false }
+                ] 
+            },
+            'obs-5': { 
+                title: "Kebijakan Evakuasi", 
+                question: "Apa yang dimaksud dengan jalur evakuasi vertikal dalam kebijakan mitigasi tsunami?", 
+                options: [
+                    { text: "Jalur menuju bangunan bertingkat atau bukit tinggi yang aman.", correct: true }, 
+                    { text: "Jalur yang mengarah langsung ke bibir pantai.", correct: false }, 
+                    { text: "Jalur untuk kembali ke rumah mengambil barang.", correct: false }
+                ] 
+            }
+        };
+
+        // Soal Khusus Mode Hard (Tata Kelola Lanjutan)
+        const hardQuizzes = {
+            'obs-1': {
+                title: "Kebijakan Tata Ruang",
+                question: "Dalam kebijakan RTRW (Rencana Tata Ruang Wilayah), zona merah di pesisir seharusnya diperuntukkan sebagai...",
+                options: [
+                    { text: "Kawasan lindung dan sabuk hijau (green belt) pantai.", correct: true },
+                    { text: "Kawasan industri padat penduduk.", correct: false },
+                    { text: "Perumahan mewah dengan pemandangan laut.", correct: false }
+                ]
+            },
+            'obs-2': {
+                title: "Lembaga Penanggulangan",
+                question: "Lembaga pemerintah non-kementerian yang dibentuk khusus untuk penanggulangan bencana adalah...",
+                options: [
+                    { text: "BNPB (Badan Nasional Penanggulangan Bencana).", correct: true },
+                    { text: "KPK (Komisi Pemberantasan Korupsi).", correct: false },
+                    { text: "BPS (Badan Pusat Statistik).", correct: false }
+                ]
+            },
+            'obs-3': {
+                title: "Regulasi Daerah",
+                question: "Pemerintah daerah wajib memiliki regulasi (Perda) yang mengatur tentang...",
+                options: [
+                    { text: "Rencana Kontinjensi dan Standar Operasional Prosedur (SOP) evakuasi.", correct: true },
+                    { text: "Tata cara membangun rumah tanpa izin.", correct: false },
+                    { text: "Pajak hiburan di kawasan pantai.", correct: false }
+                ]
+            },
+            'obs-4': {
+                title: "Hukum Kebencanaan",
+                question: "Dalam UU No. 24 Tahun 2007, penyelenggaraan penanggulangan bencana pada tahap prabencana meliputi...",
+                options: [
+                    { text: "Pencegahan, mitigasi, kesiapsiagaan, dan peringatan dini.", correct: true },
+                    { text: "Penyelamatan, evakuasi, dan rehabilitasi.", correct: false },
+                    { text: "Rekonstruksi infrastruktur yang hancur.", correct: false }
+                ]
+            },
+            'obs-5': {
+                title: "Regulasi Evakuasi",
+                question: "Sistem peringatan dini tsunami (Tsunami Early Warning System) diatur agar masyarakat dapat...",
+                options: [
+                    { text: "Melakukan evakuasi mandiri secara cepat sebelum gelombang tiba.", correct: true },
+                    { text: "Menonton gelombang tsunami dari atas gedung.", correct: false },
+                    { text: "Menyelamatkan barang berharga terlebih dahulu.", correct: false }
+                ]
+            }
+        };
+
+        // ================= GAME STATE =================
+        const game = {
+            isPlaying: false, isPaused: true, lives: 3, stars: 0, rescued: 0, currentObstacle: null,
+            difficulty: difficulties.normal,
+            invincible: false,
+            player: { x: 100, y: 0, vx: 0, vy: 0, width: 65, height: 75, isGrounded: true, speed: 4.5, jumpForce: 17, gravity: 0.7, jumpReleased: false },
+            cameraX: 0, worldWidth: 8000,
+            keys: { left: false, right: false, up: false },
+            quizTimer: null, timeLeft: 15,
+            
+            // Tsunami state
+            tsunami: { x: -6000, width: 6000 },
+            
+            // Friends state
+            friends: friendsData.map(f => ({ ...f, rescued: false, followX: f.x })),
+            
+            // Kuiz Aktif
+            activeQuizzes: standardQuizzes
+        };
+
+        // DOM
+        const mpusEl = document.getElementById('mpus');
+        const worldEl = document.getElementById('game-world');
+        const livesEl = document.getElementById('lives-container');
+        const starCountEl = document.getElementById('star-count');
+        const rescuedCountEl = document.getElementById('rescued-count');
+        const quizModal = document.getElementById('quiz-modal');
+        const quizTitle = document.getElementById('quiz-title');
+        const quizQuestion = document.getElementById('quiz-question');
+        const quizOptions = document.getElementById('quiz-options');
+        const quizFeedback = document.getElementById('quiz-feedback');
+        const quizTimerBar = document.getElementById('quiz-timer-bar');
+        const tsunamiEl = document.getElementById('tsunami-entity');
+        const tsunamiIndicator = document.getElementById('tsunami-indicator');
+
+        // ================= HELPER: GROUND HEIGHT =================
+        // Fungsi untuk menghitung ketinggian tanah (tanjakan)
+        function getGroundHeight(x) {
+            if (x < 6000) return 0;
+            if (x < 7200) return (x - 6000) * 0.25; // Naik 300px dari x=6000 ke x=7200
+            return 300; // Plateau datar dari x=7200 ke atas
+        }
+
+        // ================= UI =================
+        function showScreen(screenId) {
+            AudioEngine.playClick();
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+            
+            if (screenId === 'screen-menu') {
+                AudioEngine.tempo = 250;
+                AudioEngine.playMenuMusic();
+            }
+        }
+
+        // ================= GAME LOOP =================
+        let animationId, lastTime = 0, dustTimer = 0;
+
+        function gameLoop(time) {
+            if (!game.isPlaying) return;
+            const dt = time - lastTime; lastTime = time;
+            if (!game.isPaused) {
+                updatePhysics(dt);
+                updateCamera();
+                updateNPCs();
+                updateTsunami(dt);
+                updateFriends();
+                checkFriendRescue();
+                updateTsunamiIndicator();
+            }
+            render();
+            animationId = requestAnimationFrame(gameLoop);
+        }
+
+        function updatePhysics(dt) {
+            const p = game.player;
+            const prevY = p.y;
+
+            if (game.keys.left) p.vx = -p.speed;
+            else if (game.keys.right) p.vx = p.speed;
+            else p.vx = 0;
+            p.x += p.vx;
+            if (p.x < 0) p.x = 0;
+            if (p.x > game.worldWidth - p.width) p.x = game.worldWidth - p.width;
+
+            if (game.keys.up && p.isGrounded) {
+                p.vy = p.jumpForce; p.isGrounded = false; p.jumpReleased = false;
+                AudioEngine.playJump();
+            }
+            if (!game.keys.up && p.vy > 0 && !p.jumpReleased) {
+                p.vy *= 0.4; p.jumpReleased = true;
+            }
+
+            p.vy -= p.gravity;
+            p.y += p.vy;
+
+            // Deteksi Ketinggian Tanah (termasuk tanjakan)
+            let newY = getGroundHeight(p.x);
+
+            // Deteksi Ketinggian Atap Rumah
+            for (const house of housesData) {
+                const overlapX = p.x + p.width > house.x + 10 && p.x < house.x + house.width - 10;
+                if (overlapX && p.vy <= 0 && prevY >= house.y - 5 && p.y <= house.y + 10) {
+                    if (house.y > newY) newY = house.y;
+                }
+            }
+            
+            if (p.y <= newY) {
+                p.y = newY; p.vy = 0; p.isGrounded = true; p.jumpReleased = false;
+            } else {
+                p.isGrounded = false;
+            }
+
+            if (p.vx !== 0 && p.isGrounded) {
+                dustTimer += dt;
+                if (dustTimer > 150) { createDust(); dustTimer = 0; }
+            }
+
+            if (!game.isPaused) checkCollisions(p);
+        }
+
+        function updateNPCs() {
+            document.querySelectorAll('.npc-crab').forEach(crab => {
+                let x = parseFloat(crab.style.left) || 0;
+                x -= game.difficulty.crabSpeed;
+                if (x < -100) x = game.worldWidth + 100;
+                crab.style.left = `${x}px`;
+            });
+            document.querySelectorAll('.npc-bird').forEach(bird => {
+                let x = parseFloat(bird.style.left) || 0;
+                x -= game.difficulty.birdSpeed;
+                if (x < -100) x = game.worldWidth + 100;
+                bird.style.left = `${x}px`;
+            });
+        }
+
+        function updateTsunami(dt) {
+            game.tsunami.x += game.difficulty.tsunamiBaseSpeed;
+            
+            const tsunamiFront = game.tsunami.x + game.tsunami.width;
+            const playerLeft = game.player.x;
+            
+            if (tsunamiFront >= playerLeft && !game.invincible) {
+                game.lives--;
+                updateLivesUI();
+                AudioEngine.playMeowSad();
+                
+                mpusEl.classList.add('hurt');
+                game.invincible = true;
+                
+                game.tsunami.x = Math.max(-6000, game.player.x - 6000 - 400);
+                
+                setTimeout(() => {
+                    mpusEl.classList.remove('hurt');
+                    game.invincible = false;
+                }, 1500);
+                
+                if (game.lives <= 0) gameOver();
+            }
+        }
+
+        function updateFriends() {
+            game.friends.forEach((f, i) => {
+                if (f.rescued) {
+                    const target = game.player.x - 80 - (i * 55);
+                    f.followX += (target - f.followX) * 0.05;
+                    const el = document.getElementById(f.id);
+                    if (el) {
+                        el.style.left = f.followX + 'px';
+                        // Teman juga mengikuti ketinggian tanah
+                        el.style.bottom = `calc(20% + ${getGroundHeight(f.followX)}px)`;
+                    }
+                }
+            });
+        }
+
+        function checkFriendRescue() {
+            game.friends.forEach(f => {
+                if (!f.rescued && Math.abs(game.player.x - f.x) < 70) {
+                    f.rescued = true;
+                    f.followX = f.x;
+                    game.rescued++;
+                    rescuedCountEl.textContent = game.rescued;
+                    AudioEngine.playRescue();
+                    
+                    const el = document.getElementById(f.id);
+                    if (el) el.classList.add('rescued');
+                }
+            });
+        }
+
+        function updateTsunamiIndicator() {
+            const gap = game.player.x - game.tsunami.x;
+            const cw = document.getElementById('game-container').clientWidth;
+            const tsunamiOnScreen = game.tsunami.x + game.tsunami.width > game.cameraX;
+            
+            if (gap < 1500 && !tsunamiOnScreen && gap > 0) {
+                tsunamiIndicator.classList.remove('hidden');
+            } else {
+                tsunamiIndicator.classList.add('hidden');
+            }
+        }
+
+        function checkCollisions(p) {
+            if (game.invincible) return;
+            
+            const containerH = document.getElementById('game-container').clientHeight;
+            const playerBottom = (containerH * 0.20) + p.y;
+            const playerTop = playerBottom + p.height;
+            const playerLeft = p.x;
+            const playerRight = p.x + p.width;
+
+            let hitObstacle = null;
+            document.querySelectorAll('.obstacle:not(.cleared)').forEach(obs => {
+                const obsX = parseFloat(obs.style.left);
+                const bottomStr = obs.style.bottom;
+                let yOffset = 0;
+                if (bottomStr.includes('+')) {
+                    yOffset = parseFloat(bottomStr.split('+')[1]) || 0;
+                }
+                const obsBottom = (containerH * 0.20) + yOffset;
+                const obsTop = obsBottom + 70;
+                
+                const xOverlap = playerRight > obsX + 15 && playerLeft < obsX + 55;
+                const yOverlap = playerTop > obsBottom + 10 && playerBottom < obsTop - 10;
+                
+                if (xOverlap && yOverlap) hitObstacle = obs;
+            });
+            if (hitObstacle) { triggerQuiz(hitObstacle.id); return; }
+
+            document.querySelectorAll('.npc-crab').forEach(crab => {
+                const crabX = parseFloat(crab.style.left);
+                const crabBottom = containerH * 0.20;
+                const crabTop = crabBottom + 40;
+                const xOverlap = playerRight > crabX + 5 && playerLeft < crabX + 45;
+                const yOverlap = playerTop > crabBottom + 5 && playerBottom < crabTop - 5;
+                if (xOverlap && yOverlap) triggerHurt(crabX, 'crab');
+            });
+
+            document.querySelectorAll('.npc-bird').forEach(bird => {
+                const birdX = parseFloat(bird.style.left);
+                const birdBottom = containerH * 0.40;
+                const birdTop = birdBottom + 40;
+                const xOverlap = playerRight > birdX + 10 && playerLeft < birdX + 45;
+                const yOverlap = playerTop > birdBottom + 5 && playerBottom < birdTop - 5;
+                if (xOverlap && yOverlap) triggerHurt(birdX, 'bird');
+            });
+
+            // Menang jika mencapai Posko Evakuasi (x > 7350)
+            if (p.x > 7350) winGame();
+        }
+
+        function triggerHurt(sourceX, type) {
+            if (game.invincible) return;
+            game.invincible = true;
+            AudioEngine.playMeowSad();
+            game.lives--;
+            updateLivesUI();
+            
+            mpusEl.classList.add('hurt');
+            
+            game.player.x = Math.max(0, sourceX - 150);
+            game.player.y = getGroundHeight(game.player.x);
+            game.player.vy = 0;
+            game.player.vx = 0;
+            
+            game.tsunami.x += game.difficulty.tsunamiMistakeAdvance;
+            
+            setTimeout(() => {
+                mpusEl.classList.remove('hurt');
+                game.invincible = false;
+            }, 1500);
+
+            if (game.lives <= 0) gameOver();
+        }
+
+        function createDust() {
+            const dust = document.createElement('div');
+            dust.style.cssText = `position:absolute;left:${game.player.x + 20}px;bottom:calc(20% + ${game.player.y + 5}px);width:15px;height:15px;background:#fff;border-radius:50%;opacity:0.6;pointer-events:none;z-index:9;animation:dustAnim 0.5s linear forwards;`;
+            worldEl.appendChild(dust);
+            setTimeout(() => dust.remove(), 500);
+        }
+
+        function updateCamera() {
+            const cw = document.getElementById('game-container').clientWidth;
+            let target = game.player.x - cw / 3;
+            
+            const gap = game.player.x - game.tsunami.x;
+            if (gap < cw * 1.5 && gap > 0) {
+                const mid = (game.player.x + game.tsunami.x) / 2;
+                target = mid - cw / 2;
+            }
+            
+            game.cameraX += (target - game.cameraX) * 0.1;
+            if (game.cameraX < 0) game.cameraX = 0;
+            const max = game.worldWidth - cw;
+            if (game.cameraX > max) game.cameraX = max;
+        }
+
+        function render() {
+            worldEl.style.transform = `translateX(${-game.cameraX}px)`;
+            mpusEl.style.left = `${game.player.x}px`;
+            mpusEl.style.bottom = `calc(20% + ${game.player.y}px)`;
+            tsunamiEl.style.left = `${game.tsunami.x}px`;
+            
+            let scaleX = 1;
+            if (game.player.vx < 0) scaleX = -1;
+            
+            let bounceY = 0;
+            if (game.player.vx !== 0 && game.player.isGrounded) {
+                bounceY = Math.sin(Date.now() / 80) * 8;
+            }
+            
+            if (!mpusEl.classList.contains('dance') && !mpusEl.classList.contains('hurt')) {
+                mpusEl.style.transform = `translateY(${bounceY}px) scaleX(${scaleX})`;
+            }
+        }
+
+        // ================= QUIZ & RANDOMIZATION =================
+        
+        // Fungsi untuk mengacak array
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function triggerQuiz(obstacleId) {
+            game.isPaused = true;
+            game.currentObstacle = obstacleId;
+            game.keys.left = false; game.keys.right = false; game.keys.up = false;
+            
+            // Ambil data kuis berdasarkan tingkat kesulitan
+            const quiz = game.activeQuizzes[obstacleId];
+            
+            quizTitle.textContent = quiz.title;
+            quizQuestion.textContent = quiz.question;
+            quizFeedback.textContent = "";
+            quizFeedback.className = "feedback-msg";
+            
+            quizOptions.innerHTML = "";
+            
+            // Acak pilihan jawaban
+            const shuffledOptions = shuffleArray([...quiz.options]);
+            
+            shuffledOptions.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                // Tambahkan label A, B, C secara dinamis
+                const label = String.fromCharCode(65 + index); 
+                btn.textContent = `${label}. ${opt.text}`;
+                btn.onclick = () => handleAnswer(opt.correct, btn);
+                quizOptions.appendChild(btn);
+            });
+
+            quizModal.classList.add('active');
+            AudioEngine.playClick();
+
+            const totalTime = game.difficulty.time;
+            game.timeLeft = totalTime;
+            quizTimerBar.style.width = '100%';
+            quizTimerBar.style.backgroundColor = 'var(--danger)';
+            
+            clearInterval(game.quizTimer);
+            game.quizTimer = setInterval(() => {
+                game.timeLeft -= 0.1;
+                let percent = (game.timeLeft / totalTime) * 100;
+                quizTimerBar.style.width = `${percent}%`;
+                if (game.timeLeft <= totalTime * 0.33) {
+                    quizTimerBar.style.backgroundColor = '#922b21';
+                }
+                if (game.timeLeft <= 0) {
+                    clearInterval(game.quizTimer);
+                    handleAnswer(false, null);
+                }
+            }, 100);
+        }
+
+        function handleAnswer(isCorrect, btnElement) {
+            clearInterval(game.quizTimer);
+
+            if (isCorrect) {
+                if (btnElement) btnElement.classList.add('correct');
+                quizFeedback.textContent = "Tepat sekali! Kebijakan yang benar. Timot menari!";
+                quizFeedback.className = "feedback-msg correct";
+                AudioEngine.playCorrect();
+                
+                game.stars += 3;
+                starCountEl.textContent = game.stars;
+
+                mpusEl.classList.add('dance');
+                mpusEl.style.transform = '';
+
+                setTimeout(() => {
+                    mpusEl.classList.remove('dance');
+                    document.getElementById(game.currentObstacle).classList.add('cleared');
+                    quizModal.classList.remove('active');
+                    game.isPaused = false;
+                }, 2200);
+            } else {
+                if (btnElement) btnElement.classList.add('wrong');
+                quizFeedback.textContent = "Meooong... salah! Tsunami makin dekat!";
+                quizFeedback.className = "feedback-msg wrong";
+                AudioEngine.playMeowSad();
+                
+                game.lives--;
+                updateLivesUI();
+                
+                game.tsunami.x += game.difficulty.tsunamiMistakeAdvance;
+
+                if (game.lives <= 0) {
+                    setTimeout(() => {
+                        quizModal.classList.remove('active');
+                        gameOver();
+                    }, 2000);
+                } else {
+                    const allBtns = quizOptions.querySelectorAll('.option-btn');
+                    allBtns.forEach(b => b.disabled = true);
+                    
+                    setTimeout(() => {
+                        allBtns.forEach(b => {
+                            b.disabled = false;
+                            b.classList.remove('wrong', 'correct');
+                        });
+                        quizFeedback.textContent = "";
+                        triggerQuiz(game.currentObstacle);
+                    }, 2000);
+                }
+            }
+        }
+
+        function updateLivesUI() {
+            const hearts = livesEl.querySelectorAll('.heart');
+            hearts.forEach((heart, index) => {
+                if (index >= game.lives) heart.classList.add('lost');
+                else heart.classList.remove('lost');
+            });
+        }
+
+        // ================= GAME FLOW =================
+        function startGame(diffKey = 'normal') {
+            game.difficulty = difficulties[diffKey];
+            
+            // Pilih set soal berdasarkan mode
+            if (diffKey === 'hard') {
+                game.activeQuizzes = hardQuizzes;
+            } else {
+                game.activeQuizzes = standardQuizzes;
+            }
+            
+            AudioEngine.init();
+            AudioEngine.tempo = game.difficulty.musicTempo;
+            AudioEngine.stopMusic();
+            AudioEngine.playGameMusic();
+            
+            game.isPlaying = true;
+            game.isPaused = false;
+            game.invincible = false;
+            game.lives = game.difficulty.lives;
+            game.stars = 0;
+            game.rescued = 0;
+            game.player.x = 100;
+            game.player.y = 0;
+            game.player.vx = 0;
+            game.player.vy = 0;
+            game.player.jumpReleased = false;
+            game.cameraX = 0;
+            game.tsunami.x = -6000; 
+            
+            document.querySelectorAll('.npc-crab').forEach((crab, i) => {
+                crab.style.left = [400, 1600, 3100, 4600][i] + 'px';
+            });
+            document.querySelectorAll('.npc-bird').forEach((bird, i) => {
+                bird.style.left = [900, 2300, 3800, 5400][i] + 'px';
+            });
+            
+            game.friends.forEach(f => {
+                f.rescued = false;
+                f.followX = f.x;
+                const el = document.getElementById(f.id);
+                if (el) {
+                    el.classList.remove('rescued');
+                    el.style.left = f.x + 'px';
+                    el.style.bottom = `calc(20% + ${getGroundHeight(f.x)}px)`;
+                }
+            });
+            
+            updateLivesUI();
+            starCountEl.textContent = 0;
+            rescuedCountEl.textContent = 0;
+            
+            document.querySelectorAll('.obstacle').forEach(obs => obs.classList.remove('cleared'));
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            mpusEl.classList.remove('dance', 'hurt');
+            tsunamiIndicator.classList.add('hidden');
+            
+            const hearts = livesEl.querySelectorAll('.heart');
+            hearts.forEach((h, i) => {
+                if (i < game.difficulty.lives) {
+                    h.style.display = 'inline-block';
+                    h.classList.remove('lost');
+                } else {
+                    h.style.display = 'none';
+                }
+            });
+            
+            cancelAnimationFrame(animationId);
+            lastTime = performance.now();
+            gameLoop(lastTime);
+        }
+
+        function gameOver() {
+            game.isPlaying = false;
+            clearInterval(game.quizTimer);
+            AudioEngine.stopMusic();
+            document.getElementById('screen-gameover').classList.add('active');
+        }
+
+        function winGame() {
+            game.isPlaying = false;
+            game.isPaused = true;
+            clearInterval(game.quizTimer);
+            AudioEngine.stopMusic();
+            AudioEngine.playWin();
+            
+            document.getElementById('final-stars').textContent = game.stars;
+            document.getElementById('final-rescued').textContent = game.rescued;
+            document.getElementById('screen-win').classList.add('active');
+            
+            spawnWinParticles();
+        }
+
+        function spawnWinParticles() {
+            const container = document.getElementById('win-particles');
+            container.innerHTML = ''; 
+            
+            const colors = ['#f1c40f', '#e74c3c', '#3498db', '#2ecc71', '#9b59b6'];
+            
+            for (let i = 0; i < 40; i++) {
+                const confetti = document.createElement('div');
+                confetti.classList.add('floating-particle', 'particle-confetti');
+                confetti.style.left = `${Math.random() * 100}vw`;
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.animationDuration = `${Math.random() * 2 + 2}s`;
+                confetti.style.animationDelay = `${Math.random() * 2}s`;
+                container.appendChild(confetti);
+            }
+            
+            for (let i = 0; i < 15; i++) {
+                const star = document.createElement('div');
+                star.classList.add('floating-particle', 'particle-star');
+                star.textContent = '⭐';
+                star.style.left = `${Math.random() * 100}vw`;
+                star.style.animationDuration = `${Math.random() * 3 + 3}s`;
+                star.style.animationDelay = `${Math.random() * 3}s`;
+                container.appendChild(star);
+            }
+        }
+
+        function restartGame() {
+            startGame(game.difficulty === difficulties.easy ? 'easy' : game.difficulty === difficulties.hard ? 'hard' : 'normal');
+        }
+
+        // ================= INPUT =================
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'a' || e.key === 'A' || e.key === 'ArrowLeft') game.keys.left = true;
+            if (e.key === 'd' || e.key === 'D' || e.key === 'ArrowRight') game.keys.right = true;
+            if (e.key === ' ' || e.key === 'Space' || e.key === 'ArrowUp') {
+                e.preventDefault();
+                game.keys.up = true;
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            if (e.key === 'a' || e.key === 'A' || e.key === 'ArrowLeft') game.keys.left = false;
+            if (e.key === 'd' || e.key === 'D' || e.key === 'ArrowRight') game.keys.right = false;
+            if (e.key === ' ' || e.key === 'Space' || e.key === 'ArrowUp') game.keys.up = false;
+        });
+
+        const bindTouch = (id, key) => {
+            const el = document.getElementById(id);
+            el.addEventListener('touchstart', (e) => { e.preventDefault(); game.keys[key] = true; });
+            el.addEventListener('touchend', (e) => { e.preventDefault(); game.keys[key] = false; });
+            el.addEventListener('mousedown', () => game.keys[key] = true);
+            el.addEventListener('mouseup', () => game.keys[key] = false);
+            el.addEventListener('mouseleave', () => game.keys[key] = false);
+        };
+
+        bindTouch('btn-left', 'left');
+        bindTouch('btn-right', 'right');
+        bindTouch('btn-jump', 'up');
+
+        document.getElementById('btn-music').addEventListener('click', () => AudioEngine.toggleMusic());
+        document.getElementById('btn-sfx').addEventListener('click', () => AudioEngine.toggleSfx());
+        document.addEventListener('contextmenu', e => e.preventDefault());
+
+        const style = document.createElement('style');
+        style.textContent = `@keyframes dustAnim { 0% { transform: scale(1) translateY(0); opacity: 0.8; } 100% { transform: scale(2) translateY(-30px); opacity: 0; } }`;
+        document.head.appendChild(style);
+
+        document.body.addEventListener('click', function initAudio() {
+            if (AudioEngine.ctx) return;
+            AudioEngine.init();
+            AudioEngine.tempo = 250;
+            AudioEngine.playMenuMusic();
+            document.body.removeEventListener('click', initAudio);
+        }, { once: true });
+        
+    </script>
+</body>
+</html>
